@@ -10,15 +10,27 @@ endif ()
 add_executable(QClipboard main.cpp
         Clipboard.cpp
         Clipboard.h
+        Clipboard.qrc
 )
+
+include(FetchContent)
+FetchContent_Declare(spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog
+        GIT_TAG v1.12.0
+        DOWNLOAD_EXTRACT_TIMESTAMP true)
+
+FetchContent_Declare(QHotkey
+        GIT_REPOSITORY https://github.com/Skycoder42/QHotkey
+        DOWNLOAD_EXTRACT_TIMESTAMP true)
+
+FetchContent_MakeAvailable(spdlog QHotkey)
 
 target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
+        spdlog::spdlog_header_only
 )
-
-
 
 # Deploy the Qt Application
 if (WIN32)

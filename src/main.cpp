@@ -4,7 +4,8 @@
 int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
-	auto c = new Clipboard1();
+	Clipboard c;
+	c.show();
 
 	return QApplication::exec();
 }

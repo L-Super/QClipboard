@@ -6,7 +6,9 @@
 
 #include <QWidget>
 
-
+class QMenu;
+class QClipboard;
+class QSystemTrayIcon;
 
 class Clipboard: public QWidget
 {
@@ -16,9 +18,16 @@ public:
 	explicit Clipboard(QWidget* parent = nullptr);
 	~Clipboard() override;
 
+protected:
+	void DataChanged();
+
+private:
+	void InitTrayMenu();
+	void CreateTrayAction();
+
+
 private:
 	QClipboard *clipboard;
+	QSystemTrayIcon *trayIcon;
+	QMenu* trayMenu;
 };
-
-
-#endif //CLIPBOARD_H
