@@ -1,0 +1,11 @@
+
+# User-specific stuff
+.idea/
+
+# CMake
+cmake-build-*/
+#[D]debug/
+#[R]release/
+build/
+
+CMakeLists.txt.user
