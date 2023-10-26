@@ -1,8 +1,13 @@
 <RCC>
-    <qresource prefix="/images">
-        <file>resources/images/folder.png</file>
+    <qresource prefix="/">
+        <file>resources/images/power.svg</file>
+        <file>resources/images/setting.svg</file>
+        <file>resources/images/info.svg</file>
+        <file>resources/images/clipboard.svg</file>
+        <file>resources/images/clipboard1.svg</file>
+        <file>resources/images/clipboard2.svg</file>
     </qresource>
     <qresource prefix="/qss">
-        <file>resources/style.qss</file>
+        <file>resources/style.css</file>
     </qresource>
 </RCC>

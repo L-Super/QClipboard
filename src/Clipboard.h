@@ -5,10 +5,11 @@
 #pragma once
 
 #include <QWidget>
+#include <QSystemTrayIcon>
 
 class QMenu;
+class QHotkey;
 class QClipboard;
-class QSystemTrayIcon;
 
 class Clipboard: public QWidget
 {
@@ -18,16 +19,22 @@ public:
 	explicit Clipboard(QWidget* parent = nullptr);
 	~Clipboard() override;
 
-protected:
+protected slots:
 	void DataChanged();
+	void StayOnTop();
+	void TrayIconActivated(QSystemTrayIcon::ActivationReason reason);
 
 private:
 	void InitTrayMenu();
 	void CreateTrayAction();
+	void SetShortcut();
 
+protected:
+	void focusOutEvent(QFocusEvent * event);
 
 private:
 	QClipboard *clipboard;
 	QSystemTrayIcon *trayIcon;
 	QMenu* trayMenu;
+	QHotkey* hotkey;
 };

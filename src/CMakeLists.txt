@@ -1,3 +1,5 @@
+configure_file(version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h @ONLY)
+
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets REQUIRED)
 
@@ -17,10 +19,12 @@ include(FetchContent)
 FetchContent_Declare(spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog
         GIT_TAG v1.12.0
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/spdlog
         DOWNLOAD_EXTRACT_TIMESTAMP true)
 
 FetchContent_Declare(QHotkey
         GIT_REPOSITORY https://github.com/Skycoder42/QHotkey
+        SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/QHotkey
         DOWNLOAD_EXTRACT_TIMESTAMP true)
 
 FetchContent_MakeAvailable(spdlog QHotkey)
@@ -30,6 +34,7 @@ target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
         spdlog::spdlog_header_only
+        QHotkey::QHotkey
 )
 
 # Deploy the Qt Application
