@@ -13,27 +13,30 @@ add_executable(QClipboard main.cpp
         Clipboard.cpp
         Clipboard.h
         Clipboard.qrc
+        Item.cpp
+        Item.h
+        Item.ui
 )
 
 include(FetchContent)
-FetchContent_Declare(spdlog
-        GIT_REPOSITORY https://github.com/gabime/spdlog
-        GIT_TAG v1.12.0
-        SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/spdlog
-        DOWNLOAD_EXTRACT_TIMESTAMP true)
+#FetchContent_Declare(spdlog
+#        GIT_REPOSITORY https://github.com/gabime/spdlog
+#        GIT_TAG v1.12.0
+#        SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/spdlog
+#        DOWNLOAD_EXTRACT_TIMESTAMP true)
 
 FetchContent_Declare(QHotkey
         GIT_REPOSITORY https://github.com/Skycoder42/QHotkey
         SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/QHotkey
         DOWNLOAD_EXTRACT_TIMESTAMP true)
 
-FetchContent_MakeAvailable(spdlog QHotkey)
+FetchContent_MakeAvailable(QHotkey)
 
 target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
-        spdlog::spdlog_header_only
+#        spdlog::spdlog_header_only
         QHotkey::QHotkey
 )
 
