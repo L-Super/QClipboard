@@ -31,6 +31,7 @@ public:
 
 	void SetText(const QString& text);
 	QString GetText();
+	QImage GetImage();
 
 protected:
 	void DeleteButtonClicked();
@@ -42,6 +43,7 @@ signals:
 private:
 	Ui::Item* ui;
 	QListWidgetItem* listItem;
+	QImage latestImage;
 };
 
 

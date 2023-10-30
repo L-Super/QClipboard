@@ -31,6 +31,7 @@ protected slots:
 	void StayOnTop();
 	void TrayIconActivated(QSystemTrayIcon::ActivationReason reason);
 	void SetClipboardText(const QString& text);
+	void SetClipboardImage(const QImage& image);
 
 private:
 	void InitTrayMenu();
@@ -46,7 +47,6 @@ private:
 	QMenu* trayMenu;
 	QHotkey* hotkey;
 	QString latestText;
-	QImage latestImage;
-	QPixmap latestPixmap;
+	QByteArray latestHashValue;
 	QListWidget* listWidget;
 };

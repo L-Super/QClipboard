@@ -20,10 +20,13 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QSizePolicy>
+#include <QCryptographicHash>
+#include <QBuffer>
 //TODO：
 // 1. 快捷键激活后，窗口置顶
 // 2. 置顶后，点击非Widget区域自动隐藏
 // 3. 点击item时，如果listWidget存在该item则不再添加
+// 4. 添加一个list，用于记录加入剪贴板的item，以点击item时，重复加入
 
 Clipboard::Clipboard(QWidget* parent)
 	: QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)),
@@ -31,7 +34,7 @@ Clipboard::Clipboard(QWidget* parent)
 {
 //	setWindowOpacity(0.8);
 //	setFocus(Qt::ActiveWindowFocusReason);
-	resize(360, 300);
+	resize(360, 400);
 
 	auto label = new QLabel("剪贴板", this);
 	auto clearButton = new QPushButton("全部清除", this);
@@ -59,8 +62,17 @@ Clipboard::Clipboard(QWidget* parent)
 	connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem* item)
 	{
 		Item* widget = qobject_cast<Item*>(listWidget->itemWidget(item));
-		qDebug() << "itemClicked" << widget->GetText();
-		//TODO:设置剪贴板 clip->SetText()
+
+		qDebug() << "itemClicked";
+		if (auto text = widget->GetText();!text.isEmpty()) {
+			SetClipboardText(text);
+			return;
+		}
+
+		if (auto image = widget->GetImage();!image.isNull()) {
+			SetClipboardImage(image);
+			return;
+		}
 	});
 
 	connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
@@ -72,35 +84,51 @@ Clipboard::~Clipboard()
 }
 void Clipboard::DataChanged()
 {
-	if (latestText == clipboard->text())
+	if (latestText == clipboard->text() and not clipboard->text().isEmpty()) {
+		qDebug() << "duplicate text";
 		return;
-	qDebug() << "dataChanged" << clipboard->text();
+	}
+	qDebug() << "dataChanged text:" << clipboard->text();
 
 	QVariant data;
 	const QMimeData* mimeData = clipboard->mimeData();
+
 	if (mimeData->hasText()) {
 		latestText = mimeData->text();
 		data.setValue(latestText);
-		qDebug() << "latest text" << latestText;
 	}
 	else if (mimeData->hasImage()) {
 		// 将图片数据转为QImage
-		latestImage = qvariant_cast<QImage>(mimeData->imageData());
-		data.setValue(latestImage);
-		qDebug() << "latest image" << latestImage.width() << latestImage.height();
-	}
-	AddData(data);
+		auto image = qvariant_cast<QImage>(mimeData->imageData());
+		QByteArray ba;
+		QBuffer buffer(&ba);
+		image.save(&buffer, "PNG");
+		auto hash = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
 
+		if (hash == latestHashValue) {
+			return;
+		}
+		latestHashValue = hash;
+
+		data.setValue(image);
+
+		qDebug() << "latest image" << image.width() << image.height() << "hash:" << hash;
+	}
+
+	AddData(data);
 }
 void Clipboard::ClearItems()
 {
 	listWidget->clear();
+	clipboard->clear();
 }
 void Clipboard::RemoveItem(QListWidgetItem* item)
 {
 	listWidget->removeItemWidget(item);
 	// need to delete it, otherwise it will not disappear from the listWidget
 	delete item;
+
+	//TODO:remove exist item list
 }
 void Clipboard::StayOnTop()
 {
@@ -183,15 +211,16 @@ void Clipboard::AddData(const QVariant& data)
 	item->SetListWidgetItem(listItem);
 
 	connect(item, &Item::deleteButtonClickedSignal, this, &Clipboard::RemoveItem);
-	connect(item, &Item::itemClickedSignal, this, &Clipboard::SetClipboardText);
 
 	// 始终头插，且QListWidgetItem不能指定QListWidget为父对象
 	listWidget->insertItem(0, listItem);
 	listWidget->setItemWidget(listItem, item);
-
 }
 void Clipboard::SetClipboardText(const QString& text)
 {
-	qDebug() << "Clipboard::SetClipboardText" << text;
 	clipboard->setText(text);
+}
+void Clipboard::SetClipboardImage(const QImage& image)
+{
+	clipboard->setImage(image);
 }

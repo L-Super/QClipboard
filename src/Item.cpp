@@ -58,8 +58,8 @@ void Item::SetData(const QVariant& data)
 	else if (type == QMetaType::QImage) {
 		qDebug() << "Item add QImage";
 
-		auto pixmap = QPixmap::fromImage(data.value<QImage>());
-		ui->label->setPixmap(pixmap);
+		latestImage = data.value<QImage>();
+		ui->label->setPixmap( QPixmap::fromImage(latestImage));
 	}
 }
 void Item::SetText(const QString& text)
@@ -82,4 +82,8 @@ QListWidgetItem* Item::GetListWidgetItem()
 void Item::DeleteButtonClicked()
 {
 	emit deleteButtonClickedSignal(GetListWidgetItem());
+}
+QImage Item::GetImage()
+{
+	return latestImage;
 }
