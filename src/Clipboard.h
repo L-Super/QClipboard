@@ -22,7 +22,7 @@ public:
 	~Clipboard() override;
 
 protected:
-	void AddData(const QVariant& data);
+	void AddData(const QVariant& data, const QByteArray& hash);
 
 protected slots:
 	void DataChanged();
@@ -39,7 +39,8 @@ private:
 	void SetShortcut();
 
 protected:
-	void focusOutEvent(QFocusEvent * event) override;
+	void closeEvent(QCloseEvent* event) override;
+	bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
 	QClipboard *clipboard;
@@ -49,4 +50,5 @@ private:
 	QString latestText;
 	QByteArray latestHashValue;
 	QListWidget* listWidget;
+	QSet<QByteArray> hashItems;
 };

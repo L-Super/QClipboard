@@ -16,6 +16,9 @@ add_executable(QClipboard main.cpp
         Item.cpp
         Item.h
         Item.ui
+        AboutDialog.cpp
+        AboutDialog.h
+        AboutDialog.ui
 )
 
 include(FetchContent)

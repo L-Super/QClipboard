@@ -6,34 +6,38 @@
 #include "Clipboard.h"
 #include "QHotkey"
 #include "Item.h"
+#include "AboutDialog.h"
 
 #include <QAction>
 #include <QApplication>
+#include <QBuffer>
 #include <QClipboard>
+#include <QCloseEvent>
+#include <QDebug>
 #include <QSystemTrayIcon>
 #include <QMenu>
-#include <QDebug>
 #include <QVBoxLayout>
+#include <QLabel>
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMimeData>
-#include <QLabel>
 #include <QPushButton>
 #include <QSizePolicy>
 #include <QCryptographicHash>
-#include <QBuffer>
 //TODO：
-// 1. 快捷键激活后，窗口置顶
-// 2. 置顶后，点击非Widget区域自动隐藏
-// 3. 点击item时，如果listWidget存在该item则不再添加
-// 4. 添加一个list，用于记录加入剪贴板的item，以点击item时，重复加入
+// 1. 优化长文本显示
 
 Clipboard::Clipboard(QWidget* parent)
 	: QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)),
-	  trayMenu(new QMenu(this)), hotkey(new QHotkey()), listWidget(new QListWidget(this))
+	  trayMenu(new QMenu()), hotkey(new QHotkey()), listWidget(new QListWidget(this))
 {
 //	setWindowOpacity(0.8);
-//	setFocus(Qt::ActiveWindowFocusReason);
+
+	setWindowFlags(Qt::Window |
+		Qt::WindowTitleHint |
+		Qt::CustomizeWindowHint |
+		Qt::WindowCloseButtonHint |
+		Qt::WindowStaysOnTopHint);
 	resize(360, 400);
 
 	auto label = new QLabel("剪贴板", this);
@@ -53,11 +57,8 @@ Clipboard::Clipboard(QWidget* parent)
 	InitTrayMenu();
 	CreateTrayAction();
 
+	qApp->installEventFilter(this);
 
-//	connect(clipboard, &QClipboard::changed, this, [this](QClipboard::Mode mode)
-//	{
-//		qDebug() << "changed" << mode << clipboard->text();
-//	});
 	connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
 	connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem* item)
 	{
@@ -66,11 +67,13 @@ Clipboard::Clipboard(QWidget* parent)
 		qDebug() << "itemClicked";
 		if (auto text = widget->GetText();!text.isEmpty()) {
 			SetClipboardText(text);
+			this->hide();
 			return;
 		}
 
 		if (auto image = widget->GetImage();!image.isNull()) {
 			SetClipboardImage(image);
+			this->hide();
 			return;
 		}
 	});
@@ -84,18 +87,23 @@ Clipboard::~Clipboard()
 }
 void Clipboard::DataChanged()
 {
-	if (latestText == clipboard->text() and not clipboard->text().isEmpty()) {
-		qDebug() << "duplicate text";
+	if (clipboard->text().isEmpty()) {
 		return;
 	}
 	qDebug() << "dataChanged text:" << clipboard->text();
 
 	QVariant data;
+	QByteArray hashValue;
 	const QMimeData* mimeData = clipboard->mimeData();
 
 	if (mimeData->hasText()) {
 		latestText = mimeData->text();
 		data.setValue(latestText);
+		hashValue = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
+		if (hashItems.contains(hashValue)) {
+			qDebug() << "text exist";
+			return;
+		}
 	}
 	else if (mimeData->hasImage()) {
 		// 将图片数据转为QImage
@@ -103,51 +111,53 @@ void Clipboard::DataChanged()
 		QByteArray ba;
 		QBuffer buffer(&ba);
 		image.save(&buffer, "PNG");
-		auto hash = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
+		hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
 
-		if (hash == latestHashValue) {
+		if (hashItems.contains(hashValue)) {
+			qDebug() << "image exist";
 			return;
 		}
-		latestHashValue = hash;
 
 		data.setValue(image);
 
-		qDebug() << "latest image" << image.width() << image.height() << "hash:" << hash;
+		qDebug() << "latest image" << image.width() << image.height();
 	}
 
-	AddData(data);
+	hashItems.insert(hashValue);
+
+	AddData(data, hashValue);
 }
 void Clipboard::ClearItems()
 {
 	listWidget->clear();
 	clipboard->clear();
+	hashItems.clear();
 }
 void Clipboard::RemoveItem(QListWidgetItem* item)
 {
+	Item* widget = qobject_cast<Item*>(listWidget->itemWidget(item));
+	auto value = widget->GetHashValue();
+	hashItems.remove(value);
+
 	listWidget->removeItemWidget(item);
 	// need to delete it, otherwise it will not disappear from the listWidget
 	delete item;
-
-	//TODO:remove exist item list
 }
 void Clipboard::StayOnTop()
 {
 	qDebug("Stay on top screen");
-//	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+	activateWindow();
 	show();
-//	setFocus();
-//	setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
 }
 void Clipboard::InitTrayMenu()
 {
 	//TODO:update icon
 	trayIcon->setIcon(QIcon(":/resources/images/clipboard2.svg"));
-	//TODO:不显示tooltip
-	trayIcon->setToolTip("QClipboard");
-
 	// 在右键时，弹出菜单。
 	trayIcon->setContextMenu(trayMenu);
 	trayIcon->show();
+	// show()之后才生效
+	trayIcon->setToolTip("QClipboard");
 	// 在系统拖盘增加图标时显示提示信息
 	trayIcon->showMessage("QClipboard 剪贴板", "已隐藏至系统托盘");
 	connect(trayIcon, &QSystemTrayIcon::activated, this, &Clipboard::TrayIconActivated);
@@ -169,9 +179,11 @@ void Clipboard::CreateTrayAction()
 
 	connect(aboutAction, &QAction::triggered, this, [this]
 	{
-//		// 控制着当最后一个可视的窗口退出时候，程序是否退出，默认是true
-//		// 不加的话，点击后主程序也退出了
-//		QApplication::setQuitOnLastWindowClosed(false);
+		// 控制着当最后一个可视的窗口退出时候，程序是否退出，默认是true
+		// 不加的话，点击后主程序也退出了
+		QApplication::setQuitOnLastWindowClosed(false);
+		AboutDialog aboutDialog;
+		aboutDialog.exec();
 	});
 }
 void Clipboard::SetShortcut()
@@ -184,17 +196,12 @@ void Clipboard::SetShortcut()
 	auto hideKey = new QHotkey(QKeySequence("Alt+H"), true, this);
 	connect(hideKey, &QHotkey::activated, this, &Clipboard::hide);
 }
-void Clipboard::focusOutEvent(QFocusEvent* event)
-{
-	qDebug() << "lose focus and hide";
-	hide();
-}
+
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
 	switch (reason) {
-	case QSystemTrayIcon::DoubleClick: {
+	case QSystemTrayIcon::Trigger: {
 		this->showNormal();
-//		trayIcon->hide();
 	}
 		break;
 
@@ -202,12 +209,12 @@ void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 		break;
 	}
 }
-void Clipboard::AddData(const QVariant& data)
+void Clipboard::AddData(const QVariant& data, const QByteArray& hash)
 {
 	auto listItem = new QListWidgetItem();
 	listItem->setSizeHint(QSize(300, 80));
 	auto item = new Item(this);
-	item->SetData(data);
+	item->SetData(data, hash);
 	item->SetListWidgetItem(listItem);
 
 	connect(item, &Item::deleteButtonClickedSignal, this, &Clipboard::RemoveItem);
@@ -223,4 +230,22 @@ void Clipboard::SetClipboardText(const QString& text)
 void Clipboard::SetClipboardImage(const QImage& image)
 {
 	clipboard->setImage(image);
+}
+
+void Clipboard::closeEvent(QCloseEvent* event)
+{
+	hide();
+	event->ignore();
+}
+bool Clipboard::eventFilter(QObject* obj, QEvent* event)
+{
+	// 窗口停用
+	if (QEvent::WindowDeactivate == event->type())
+	{
+		qDebug() << "hide";
+		hide();
+		return true;
+	}
+
+	return QWidget::eventFilter(obj, event);
 }

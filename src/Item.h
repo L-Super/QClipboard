@@ -25,13 +25,14 @@ public:
 
 	~Item() override;
 
-	void SetData(const QVariant& data);
+	void SetData(const QVariant& data, const QByteArray& hash);
 	void SetListWidgetItem(QListWidgetItem* listWidgetItem);
 	QListWidgetItem* GetListWidgetItem();
 
 	void SetText(const QString& text);
 	QString GetText();
 	QImage GetImage();
+	QByteArray GetHashValue();
 
 protected:
 	void DeleteButtonClicked();
@@ -44,6 +45,7 @@ private:
 	Ui::Item* ui;
 	QListWidgetItem* listItem;
 	QImage latestImage;
+	QByteArray hashValue;
 };
 
 

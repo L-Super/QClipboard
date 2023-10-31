@@ -17,7 +17,7 @@ Item::Item(QWidget* parent)
 
 	ui->label->setWordWrap(true);
 	ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
-	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
+//	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
 
 	connect(ui->deletePushButton, &QPushButton::clicked, this, &Item::DeleteButtonClicked);
 }
@@ -29,7 +29,7 @@ Item::Item(const QString& text, QWidget* parent)
 
 	ui->label->setWordWrap(true);
 	ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
-	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
+//	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
 
 	ui->label->setText(text);
 
@@ -39,9 +39,9 @@ Item::Item(const QString& text, QWidget* parent)
 Item::~Item()
 {
 	delete ui;
-	qDebug()<<"~Item";
+	qDebug() << "~Item";
 }
-void Item::SetData(const QVariant& data)
+void Item::SetData(const QVariant& data, const QByteArray& hash)
 {
 	auto type = data.userType();
 
@@ -59,8 +59,10 @@ void Item::SetData(const QVariant& data)
 		qDebug() << "Item add QImage";
 
 		latestImage = data.value<QImage>();
-		ui->label->setPixmap( QPixmap::fromImage(latestImage));
+		ui->label->setPixmap(QPixmap::fromImage(latestImage));
 	}
+
+	hashValue = hash;
 }
 void Item::SetText(const QString& text)
 {
@@ -86,4 +88,8 @@ void Item::DeleteButtonClicked()
 QImage Item::GetImage()
 {
 	return latestImage;
+}
+QByteArray Item::GetHashValue()
+{
+	return hashValue;
 }
