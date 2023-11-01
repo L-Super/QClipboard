@@ -33,7 +33,7 @@ Clipboard::Clipboard(QWidget* parent)
 	: QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)),
 	  trayMenu(new QMenu()), hotkey(new QHotkey()), listWidget(new QListWidget(this))
 {
-//	setWindowOpacity(0.9);
+	setWindowOpacity(0.9);
 
 	setWindowFlags(Qt::Window |
 		Qt::WindowTitleHint |

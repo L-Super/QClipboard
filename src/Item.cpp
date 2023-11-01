@@ -2,8 +2,6 @@
  * Created by LMR on 2023/10/27.
 */
 
-// You may need to build the project (run Qt uic code generator) to get "ui_Item.h" resolved
-
 #include "Item.h"
 #include "ui_Item.h"
 #include <QVariant>
@@ -41,7 +39,6 @@ Item::Item(const QString& text, QWidget* parent)
 Item::~Item()
 {
 	delete ui;
-	qDebug() << "~Item";
 }
 void Item::SetData(const QVariant& data, const QByteArray& hash)
 {

@@ -11,12 +11,15 @@ AboutDialog::AboutDialog(QWidget* parent)
 	ui->setupUi(this);
 	ui->imagePushButton->setEnabled(false);
 	ui->imagePushButton->setIcon(QIcon(":/resources/images/clipboard2.svg"));
-	const QString md{"### 简介\n"
+	const QString version = qApp->applicationVersion();
+	const QString md{QString("### 简介\n"
 					 "一个跨平台的剪贴板工具，可以从剪贴板历史记录中选择对应的项进行粘贴。\n"
 					 "### 使用方式\n"
 					 "快捷键 `Alt + V`显示剪贴板\n"
+					 "### 版本\n"
+					 "v%1\n"
 					 "### 地址\n"
-					 "[L-Super/QClipboard](https://github.com/L-Super/QClipboard)"
+					 "[L-Super/QClipboard](https://github.com/L-Super/QClipboard)").arg(version)
 	};
 	ui->textBrowser->setMarkdown(md);
 	ui->textBrowser->setOpenExternalLinks(true);

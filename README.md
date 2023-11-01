@@ -14,7 +14,6 @@ A cross-platform clipboard tool that allows selecting items from clipboard histo
 
 ## Todo
 
-- [ ] model/view widget
 - [x] support image
 - [ ] LAN shared clipboard
 
