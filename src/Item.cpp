@@ -16,6 +16,7 @@ Item::Item(QWidget* parent)
 	ui->setupUi(this);
 
 	ui->label->setWordWrap(true);
+	ui->label->setAlignment(Qt::AlignTop);
 	ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
 //	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
 
@@ -28,6 +29,7 @@ Item::Item(const QString& text, QWidget* parent)
 	ui->setupUi(this);
 
 	ui->label->setWordWrap(true);
+	ui->label->setAlignment(Qt::AlignTop);
 	ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
 //	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
 
@@ -46,7 +48,6 @@ void Item::SetData(const QVariant& data, const QByteArray& hash)
 	auto type = data.userType();
 
 	if (type == QMetaType::QString) {
-		qDebug() << "Item add QString" << data.toString();
 		SetText(data.toString());
 	}
 	else if (type == QMetaType::QPixmap) {
@@ -56,8 +57,6 @@ void Item::SetData(const QVariant& data, const QByteArray& hash)
 		ui->label->setPixmap(pixmap);
 	}
 	else if (type == QMetaType::QImage) {
-		qDebug() << "Item add QImage";
-
 		latestImage = data.value<QImage>();
 		ui->label->setPixmap(QPixmap::fromImage(latestImage));
 	}

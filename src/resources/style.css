@@ -1,0 +1,15 @@
+QListWidget {
+    border: 15px solid white;
+    border-radius: 10px;
+}
+
+QListWidget::item {
+    background-color: transparent;
+    border-bottom: 1px solid #dbdbdb;
+}
+
+QListWidget::item:hover {
+    background-color: transparent;
+    padding: 10px;
+    border-left: 3px solid #828282;
+}

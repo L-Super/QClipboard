@@ -24,14 +24,16 @@
 #include <QPushButton>
 #include <QSizePolicy>
 #include <QCryptographicHash>
-//TODO：
-// 1. 优化长文本显示
+
+//TODO:
+// 1.美化垂直滚动条
+
 
 Clipboard::Clipboard(QWidget* parent)
 	: QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)),
 	  trayMenu(new QMenu()), hotkey(new QHotkey()), listWidget(new QListWidget(this))
 {
-//	setWindowOpacity(0.8);
+//	setWindowOpacity(0.9);
 
 	setWindowFlags(Qt::Window |
 		Qt::WindowTitleHint |
@@ -53,6 +55,9 @@ Clipboard::Clipboard(QWidget* parent)
 	layout->addLayout(hLayout);
 	layout->addWidget(listWidget);
 
+	// 屏蔽水平滚动条
+	listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
 	SetShortcut();
 	InitTrayMenu();
 	CreateTrayAction();
@@ -64,7 +69,6 @@ Clipboard::Clipboard(QWidget* parent)
 	{
 		Item* widget = qobject_cast<Item*>(listWidget->itemWidget(item));
 
-		qDebug() << "itemClicked";
 		if (auto text = widget->GetText();!text.isEmpty()) {
 			SetClipboardText(text);
 			this->hide();
@@ -90,7 +94,6 @@ void Clipboard::DataChanged()
 	if (clipboard->text().isEmpty()) {
 		return;
 	}
-	qDebug() << "dataChanged text:" << clipboard->text();
 
 	QVariant data;
 	QByteArray hashValue;
@@ -101,7 +104,7 @@ void Clipboard::DataChanged()
 		data.setValue(latestText);
 		hashValue = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
 		if (hashItems.contains(hashValue)) {
-			qDebug() << "text exist";
+			qWarning() << "text exist";
 			return;
 		}
 	}
@@ -114,13 +117,11 @@ void Clipboard::DataChanged()
 		hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
 
 		if (hashItems.contains(hashValue)) {
-			qDebug() << "image exist";
+			qWarning() << "image exist";
 			return;
 		}
 
 		data.setValue(image);
-
-		qDebug() << "latest image" << image.width() << image.height();
 	}
 
 	hashItems.insert(hashValue);
@@ -145,7 +146,6 @@ void Clipboard::RemoveItem(QListWidgetItem* item)
 }
 void Clipboard::StayOnTop()
 {
-	qDebug("Stay on top screen");
 	activateWindow();
 	show();
 }
@@ -164,7 +164,6 @@ void Clipboard::InitTrayMenu()
 }
 void Clipboard::CreateTrayAction()
 {
-	//TODO:完善Action
 	auto aboutAction = new QAction("关于");
 	auto exitAction = new QAction("退出");
 
@@ -191,10 +190,6 @@ void Clipboard::SetShortcut()
 	//TODO:设置不冲突的快捷键
 	hotkey->setShortcut(QKeySequence("Alt+V"), true);
 	connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
-
-	// for test
-	auto hideKey = new QHotkey(QKeySequence("Alt+H"), true, this);
-	connect(hideKey, &QHotkey::activated, this, &Clipboard::hide);
 }
 
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason)
@@ -242,7 +237,6 @@ bool Clipboard::eventFilter(QObject* obj, QEvent* event)
 	// 窗口停用
 	if (QEvent::WindowDeactivate == event->type())
 	{
-		qDebug() << "hide";
 		hide();
 		return true;
 	}
