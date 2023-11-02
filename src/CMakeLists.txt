@@ -17,19 +17,24 @@ set(SRC_FILES
 )
 set(RES_FILES Clipboard.qrc)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    message(STATUS "Debug mode")
+if (WINDOWS)
+    if (CMAKE_BUILD_TYPE STREQUAL "Release")
+        add_executable(${PROJECT_NAME} WIN32
+                ${SRC_FILES}
+                ${RES_FILES}
+        )
+    else ()
+        add_executable(${PROJECT_NAME}
+                ${SRC_FILES}
+                ${RES_FILES}
+        )
+    endif ()
+else ()
     add_executable(${PROJECT_NAME}
             ${SRC_FILES}
             ${RES_FILES}
     )
-else(CMAKE_BUILD_TYPE STREQUAL "Release")
-    message(STATUS "Release mode")
-    add_executable(${PROJECT_NAME} WIN32
-            ${SRC_FILES}
-            ${RES_FILES}
-    )
-endif()
+endif ()
 
 include(FetchContent)
 FetchContent_Declare(QHotkey
