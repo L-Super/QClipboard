@@ -59,8 +59,8 @@ Clipboard::Clipboard(QWidget* parent)
 	listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
 	SetShortcut();
-	InitTrayMenu();
 	CreateTrayAction();
+	InitTrayMenu();
 
 	qApp->installEventFilter(this);
 
@@ -178,9 +178,6 @@ void Clipboard::CreateTrayAction()
 
 	connect(aboutAction, &QAction::triggered, this, [this]
 	{
-		// 控制着当最后一个可视的窗口退出时候，程序是否退出，默认是true
-		// 不加的话，点击后主程序也退出了
-		QApplication::setQuitOnLastWindowClosed(false);
 		AboutDialog aboutDialog;
 		aboutDialog.exec();
 	});
@@ -195,7 +192,8 @@ void Clipboard::SetShortcut()
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason)
 {
 	switch (reason) {
-	case QSystemTrayIcon::Trigger: {
+	case QSystemTrayIcon::Trigger:
+	case QSystemTrayIcon::DoubleClick: {
 		this->showNormal();
 	}
 		break;
