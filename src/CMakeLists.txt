@@ -9,25 +9,29 @@ if (WIN32)
     find_program(DEPLOYQT_EXECUTABLE windeployqt HINTS "${QtBinDir}")
 endif ()
 
-add_executable(QClipboard main.cpp
-        Clipboard.cpp
-        Clipboard.h
-        Clipboard.qrc
-        Item.cpp
-        Item.h
-        Item.ui
-        AboutDialog.cpp
-        AboutDialog.h
-        AboutDialog.ui
+set(SRC_FILES
+        main.cpp
+        Clipboard.cpp Clipboard.h
+        Item.cpp Item.h Item.ui
+        AboutDialog.cpp AboutDialog.h AboutDialog.ui
 )
+set(RES_FILES Clipboard.qrc)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message(STATUS "Debug mode")
+    add_executable(${PROJECT_NAME}
+            ${SRC_FILES}
+            ${RES_FILES}
+    )
+else(CMAKE_BUILD_TYPE STREQUAL "Release")
+    message(STATUS "Release mode")
+    add_executable(${PROJECT_NAME} WIN32
+            ${SRC_FILES}
+            ${RES_FILES}
+    )
+endif()
 
 include(FetchContent)
-#FetchContent_Declare(spdlog
-#        GIT_REPOSITORY https://github.com/gabime/spdlog
-#        GIT_TAG v1.12.0
-#        SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/spdlog
-#        DOWNLOAD_EXTRACT_TIMESTAMP true)
-
 FetchContent_Declare(QHotkey
         GIT_REPOSITORY https://github.com/Skycoder42/QHotkey
         SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/QHotkey
@@ -39,7 +43,6 @@ target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
-#        spdlog::spdlog_header_only
         QHotkey::QHotkey
 )
 
