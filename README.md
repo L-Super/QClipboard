@@ -5,6 +5,9 @@
 ## Overview
 A cross-platform clipboard tool that allows selecting items from clipboard history to paste. It provides a convenient way to view clipboard history and quickly paste any previously copied content.
 
+![](images/screenshot1.png)
+The global shortcut `Alt + V` can be used to display the clipboard.
+
 ## Features
 
 - Cross-platform（Windows, macOS and Linux）
