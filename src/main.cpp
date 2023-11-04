@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
 	}
 
 	// 控制着当最后一个可视的窗口退出时候，程序是否退出，默认是true
-	// 不加的话，点击后主程序也退出了
 	QApplication::setQuitOnLastWindowClosed(false);
 	
 	Clipboard c;
