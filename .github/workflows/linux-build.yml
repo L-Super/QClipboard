@@ -66,10 +66,8 @@ jobs:
         id: cache-qt
         uses: actions/cache@v3
         with:
-          # install-qt-action default path is workspace/../Qt/5.15.2/. 
           # github.workspace: /home/runner/work/QClipboard/QClipboard/
-          # default path: /home/runner/work/QClipboard/Qt/5.15.2
-          path: ${{ github.workspace }}/../Qt
+          path: ${{ github.workspace }}/Qt
           key: ${{ runner.os }}-QtCache
 
       - name: Install Qt
@@ -78,6 +76,9 @@ jobs:
         with:
           # default is 5.15.2
           version: ${{ matrix.qt_version }}
+          # default path: /home/runner/work/QClipboard/Qt/5.15.2/
+          # change default path to /home/runner/work/QClipboard/QClipboard/Qt/
+          dir: "${{ github.workspace }}"
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. 
