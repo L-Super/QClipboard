@@ -4,7 +4,6 @@
         <file>resources/images/setting.svg</file>
         <file>resources/images/info.svg</file>
         <file>resources/images/delete.svg</file>
-        <file>resources/images/clipboard.svg</file>
         <file>resources/images/clipboard1.svg</file>
         <file>resources/images/clipboard2.svg</file>
     </qresource>

@@ -4,6 +4,7 @@
 
 #include "Item.h"
 #include "ui_Item.h"
+#include <QDebug>
 #include <QVariant>
 #include <QPixmap>
 #include <QListWidgetItem>
