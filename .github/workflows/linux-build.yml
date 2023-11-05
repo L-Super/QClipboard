@@ -32,6 +32,7 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         os: [ubuntu-latest, ubuntu-20.04]
+        qt_version: [5.15.2]
         build_type: [Release]
         cpp_compiler: [g++, clang++]
         include:
@@ -65,14 +66,18 @@ jobs:
         id: cache-qt
         uses: actions/cache@v3
         with:
-            path: ${{ github.workspace }}/Qt
-            key: ${{ runner.os }}-QtCache
+          # install-qt-action default path is workspace/../Qt/5.15.2/. 
+          # github.workspace: /home/runner/work/QClipboard/QClipboard/
+          # default path: /home/runner/work/QClipboard/Qt/5.15.2
+          path: ${{ github.workspace }}/../Qt
+          key: ${{ runner.os }}-QtCache
 
       - name: Install Qt
         if: steps.cache-qt.outputs.cache-hit != 'true'
         uses: jurplel/install-qt-action@v3
         with:
-          dir: "${{ github.workspace }}"
+          # default is 5.15.2
+          version: ${{ matrix.qt_version }}
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. 
