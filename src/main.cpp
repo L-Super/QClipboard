@@ -1,6 +1,6 @@
 #include <QApplication>
 #include <QFile>
-#include "SingleApplication.h"
+#include "SingleApplication"
 #include "Clipboard.h"
 #include "version.h"
 
