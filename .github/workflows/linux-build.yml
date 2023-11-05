@@ -41,6 +41,12 @@ jobs:
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
+          - os: ubuntu-20.04
+            c_compiler: gcc
+            cpp_compiler: g++
+          - os: ubuntu-20.04
+            c_compiler: clang
+            cpp_compiler: clang++
         # exclude:
         #   - os: windows-latest
         #     c_compiler: gcc
@@ -65,7 +71,6 @@ jobs:
         run: >
           cmake -B ${{github.workspace}}/build
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
