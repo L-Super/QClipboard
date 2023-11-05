@@ -1,5 +1,5 @@
-[submodule "src/third_party/QHotKey"]
-	path = src/third_party/QHotKey
+[submodule "src/third_party/QHotkey"]
+	path = src/third_party/QHotkey
 	url = https://github.com/Skycoder42/QHotkey
 
 [submodule "src/third_party/SingleApplication"]

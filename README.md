@@ -19,7 +19,7 @@ The global shortcut `Alt + V` can be used to display the clipboard.
 ## Building
 
 ```bash
-git clone https://github.com/L-Super/QClipboard --recurse
+git clone https://github.com/L-Super/QClipboard --recursive
 cd QClipboard
 cmake -B build
 cmake --build build
