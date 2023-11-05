@@ -71,6 +71,8 @@ jobs:
       - name: Install Qt
         if: steps.cache-qt.outputs.cache-hit != 'true'
         uses: jurplel/install-qt-action@v3
+        with:
+          dir: "${{ github.workspace }}"
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. 
