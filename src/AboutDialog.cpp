@@ -12,16 +12,32 @@ AboutDialog::AboutDialog(QWidget* parent)
 	ui->imagePushButton->setEnabled(false);
 	ui->imagePushButton->setIcon(QIcon(":/resources/images/clipboard2.svg"));
 	const QString version = qApp->applicationVersion();
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
 	const QString md{QString("### 简介\n"
-					 "一个跨平台的剪贴板工具，可以从剪贴板历史记录中选择对应的项进行粘贴。\n"
-					 "### 使用方式\n"
-					 "快捷键 `Alt + V`显示剪贴板\n"
-					 "### 版本\n"
-					 "v%1\n"
-					 "### 地址\n"
-					 "[L-Super/QClipboard](https://github.com/L-Super/QClipboard)").arg(version)
+							 "一个跨平台的剪贴板工具，可以从剪贴板历史记录中选择对应的项进行粘贴。\n"
+							 "### 使用方式\n"
+							 "快捷键 `Alt + V`显示剪贴板\n"
+							 "### 版本\n"
+							 "v%1\n"
+							 "### 地址\n"
+							 "[L-Super/QClipboard](https://github.com/L-Super/QClipboard)").arg(version)
 	};
 	ui->textBrowser->setMarkdown(md);
+#elif
+	QString html{R"(<html><head><meta charset="utf-8"><title>about</title></head>
+<body>
+    <h3>简介</h3>
+    <p>一个跨平台的剪贴板工具，可以从剪贴板历史记录中选择对应的项进行粘贴。</p>
+    <h3>使用方式</h3>
+    <p>快捷键 Alt + V 显示剪贴板</p>
+    <h3>版本</h3>
+    <p>v)"};
+	html.append(version);
+	html.append(R"(</p> <h3>地址</h3>
+    <p><a href="https://github.com/L-Super/QClipboard">QClipboard</a></p>
+</body></html>)");
+	ui->textBrowser->setHtml(html);
+#endif
 	ui->textBrowser->setOpenExternalLinks(true);
 }
 
