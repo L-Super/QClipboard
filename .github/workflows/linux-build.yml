@@ -61,8 +61,16 @@ jobs:
         with:
           submodules: true
           
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v3
+        with:
+            path: ${{ github.workspace }}/Qt
+            key: ${{ runner.os }}-QtCache
+
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3.3.0
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        uses: jurplel/install-qt-action@v3
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. 
