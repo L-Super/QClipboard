@@ -2,7 +2,7 @@ name: Building(CMake)
 
 on:
   push:
-    branches: [ "mian" ]
+    branches: [ "main" ]
     paths-ignore:
     #   - 'README.md'
       - 'README_zh.md'
