@@ -11,5 +11,3 @@ build/
 CMakeLists.txt.user
 
 src/version.h
-
-third_party/
