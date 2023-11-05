@@ -23,7 +23,7 @@ AboutDialog::AboutDialog(QWidget* parent)
 							 "[L-Super/QClipboard](https://github.com/L-Super/QClipboard)").arg(version)
 	};
 	ui->textBrowser->setMarkdown(md);
-#elif
+#else
 	QString html{R"(<html><head><meta charset="utf-8"><title>about</title></head>
 <body>
     <h3>简介</h3>
