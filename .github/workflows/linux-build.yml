@@ -62,13 +62,13 @@ jobs:
         with:
           submodules: true
           
-      - name: Cache Qt
-        id: cache-qt
-        uses: actions/cache@v3
-        with:
-          # github.workspace: /home/runner/work/QClipboard/QClipboard/
-          path: ${{ github.workspace }}/Qt
-          key: ${{ runner.os }}-QtCache
+      # - name: Cache Qt
+      #   id: cache-qt
+      #   uses: actions/cache@v3
+      #   with:
+      #     # github.workspace: /home/runner/work/QClipboard/QClipboard/
+      #     path: ${{ github.workspace }}/Qt
+      #     key: ${{ runner.os }}-QtCache
 
       - name: Install Qt
         if: steps.cache-qt.outputs.cache-hit != 'true'
@@ -76,16 +76,16 @@ jobs:
         with:
           # default is 5.15.2
           version: ${{ matrix.qt_version }}
-          # default path: /home/runner/work/QClipboard/Qt/5.15.2/
-          # change default path to /home/runner/work/QClipboard/QClipboard/Qt/
-          dir: "${{ github.workspace }}"
+      #     # default path: /home/runner/work/QClipboard/Qt/5.15.2/
+      #     # change default path to /home/runner/work/QClipboard/QClipboard/Qt/
+      #     dir: "${{ github.workspace }}"
 
-        # Only the Qt file is cached, but the environment can not be set automatically
-      - name: Set Qt environment variables
-        run: |
-            echo 'export QTDIR=${{ github.workspace }}/Qt/${{ matrix.qt_version }}/gcc_64' >> $GITHUB_ENV
-            echo 'export PATH=$QTDIR/bin:$PATH' >> $GITHUB_ENV
-            echo 'export LD_LIBRARY_PATH=$QTDIR/lib:$LD_LIBRARY_PATH' >> $GITHUB_ENV
+      #   # Only the Qt file is cached, but the environment can not be set automatically
+      # - name: Set Qt environment variables
+      #   run: |
+      #       echo 'export QTDIR=${{ github.workspace }}/Qt/${{ matrix.qt_version }}/gcc_64' >> $GITHUB_ENV
+      #       echo 'export PATH=$QTDIR/bin:$PATH' >> $GITHUB_ENV
+      #       echo 'export LD_LIBRARY_PATH=$QTDIR/lib:$LD_LIBRARY_PATH' >> $GITHUB_ENV
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. 
