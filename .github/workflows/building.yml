@@ -42,20 +42,10 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          sudo apt-get -y -qq update
-          sudo apt-get -y --no-install-recommends install \
-            cmake \
-            extra-cmake-modules \
-            build-essential \
+          sudo apt-get -y install \
             qtbase5-dev \
-            qttools5-dev-tools \
-            qttools5-dev \
-            libqt5dbus5 \
-            libqt5network5 \
-            libqt5core5a \
-            libqt5widgets5 \
-            libqt5gui5 \
-            libqt5svg5-dev
+            qt5-default \
+            libqt5x11extras5-dev
 
       - name: Configure CMake
         shell: bash
