@@ -54,7 +54,7 @@ jobs:
       - name: Build
         # working-directory: ${{runner.workspace}}/build
         shell: bash
-        run: cmake --build . --config $BUILD_TYPE
+        run: cmake --build build --config $BUILD_TYPE
 
       - name: Test
         # working-directory: ${{runner.workspace}}/build
