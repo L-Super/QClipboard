@@ -2,13 +2,13 @@ name: Building(CMake)
 
 on:
   push:
-    branches: [ mian ]
+    branches: [ "mian" ]
     paths-ignore:
     #   - 'README.md'
       - 'README_zh.md'
       - 'LICENSE'
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
     paths-ignore:
       - 'README.md'
       - 'README_zh.md'
