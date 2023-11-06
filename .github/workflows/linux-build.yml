@@ -71,7 +71,7 @@ jobs:
       #     key: ${{ runner.os }}-QtCache
 
       - name: Install Qt
-        if: steps.cache-qt.outputs.cache-hit != 'true'
+      # if: steps.cache-qt.outputs.cache-hit != 'true'
         uses: jurplel/install-qt-action@v3
         with:
           # default is 5.15.2
