@@ -34,11 +34,13 @@ else ()
             ${SRC_FILES}
             ${RES_FILES}
     )
-    set_target_properties(${PROJECT_NAME}
-            PROPERTIES
-            INSTALL_RPATH "$ORIGIN:$ORIGIN.:$ORIGIN/lib"
-            BUILD_WITH_INSTALL_RPATH TRUE
-    )
+    if (UNIX AND NOT APPLE)
+        set_target_properties(${PROJECT_NAME}
+                PROPERTIES
+                INSTALL_RPATH "$ORIGIN:$ORIGIN.:$ORIGIN/lib"
+                BUILD_WITH_INSTALL_RPATH TRUE
+        )
+    endif ()
 endif ()
 
 #include(FetchContent)

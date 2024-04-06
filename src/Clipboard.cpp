@@ -26,8 +26,10 @@
 #include <QCryptographicHash>
 
 //TODO:
-// 1.美化垂直滚动条
-
+// 1. 美化垂直滚动条
+// 2. 设置不冲突的快捷键,增加配置文件，支持更改快捷键
+// 3. macOS适配
+// 4. 点击item时，自动在光标处粘贴
 
 Clipboard::Clipboard(QWidget* parent)
 	: QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)),
@@ -158,11 +160,11 @@ void Clipboard::InitTrayMenu()
 #if defined(Q_OS_WIN32)
 	trayIcon->show();
 #endif
-	// show()之后才生效
+	// Windows show()之后才生效
 	trayIcon->setToolTip("QClipboard");
 	// 在系统拖盘增加图标时显示提示信息
 	trayIcon->showMessage("QClipboard 剪贴板", "已隐藏至系统托盘");
-#if defined(Q_OS_LINUX)
+#if defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
 	trayIcon->show();
 #endif
 	connect(trayIcon, &QSystemTrayIcon::activated, this, &Clipboard::TrayIconActivated);
@@ -189,7 +191,6 @@ void Clipboard::CreateTrayAction()
 }
 void Clipboard::SetShortcut()
 {
-	//TODO:设置不冲突的快捷键
 	hotkey->setShortcut(QKeySequence("Alt+V"), true);
 	connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
