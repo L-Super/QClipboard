@@ -11,7 +11,7 @@ The global shortcut `Alt + V` can be used to display the clipboard.
 
 ## Features
 
-- Cross-platform（Windows, macOS and Linux）
+- Cross-platform（Windows, Linux and ~~macOS~~）
 - Quickly browse clipboard history items, including text and images 
 - View history from global hotkeys or system tray icon
 - Delete items from history
