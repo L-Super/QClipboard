@@ -75,7 +75,8 @@ if (WIN32)
     add_custom_command(TARGET ${PROJECT_NAME}
             POST_BUILD
             COMMAND ${DEPLOYQT_EXECUTABLE}
-            #        --no-translations --no-compiler-runtime
+            --no-translations
+            # --no-compiler-runtime
             $<TARGET_FILE:${PROJECT_NAME}>
     )
 endif ()

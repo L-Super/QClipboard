@@ -1,249 +1,227 @@
 /**
  * Created by LMR on 2023/10/24.
-*/
-
+ */
 
 #include "Clipboard.h"
-#include "QHotkey"
-#include "Item.h"
 #include "AboutDialog.h"
+#include "Item.h"
+#include "QHotkey"
 
 #include <QAction>
 #include <QApplication>
 #include <QBuffer>
 #include <QClipboard>
 #include <QCloseEvent>
+#include <QCryptographicHash>
 #include <QDebug>
-#include <QSystemTrayIcon>
-#include <QMenu>
-#include <QVBoxLayout>
 #include <QLabel>
 #include <QListWidget>
 #include <QListWidgetItem>
+#include <QMenu>
 #include <QMimeData>
 #include <QPushButton>
 #include <QSizePolicy>
-#include <QCryptographicHash>
+#include <QSystemTrayIcon>
+#include <QVBoxLayout>
 
-//TODO:
-// 1. 美化垂直滚动条
-// 2. 设置不冲突的快捷键,增加配置文件，支持更改快捷键
-// 3. macOS适配
-// 4. 点击item时，自动在光标处粘贴
+// TODO:
+//  1. 美化垂直滚动条
+//  2. 设置不冲突的快捷键,增加配置文件，支持更改快捷键
+//  3. macOS适配
+//  4. 点击item时，自动在光标处粘贴
 
-Clipboard::Clipboard(QWidget* parent)
-	: QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)),
-	  trayMenu(new QMenu()), hotkey(new QHotkey()), listWidget(new QListWidget(this))
-{
-	setWindowOpacity(0.9);
+Clipboard::Clipboard(QWidget *parent)
+    : QWidget(parent), clipboard(QApplication::clipboard()),
+      trayIcon(new QSystemTrayIcon(this)), trayMenu(new QMenu()),
+      hotkey(new QHotkey()), listWidget(new QListWidget(this)) {
+  setWindowOpacity(0.9);
 
-	setWindowFlags(Qt::Window |
-		Qt::WindowTitleHint |
-		Qt::CustomizeWindowHint |
-		Qt::WindowCloseButtonHint |
-		Qt::WindowStaysOnTopHint);
-	resize(360, 400);
+  setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint |
+                 Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint);
+  resize(360, 400);
 
-	auto label = new QLabel("剪贴板", this);
-	auto clearButton = new QPushButton("全部清除", this);
-	clearButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+  auto label = new QLabel("剪贴板", this);
+  auto clearButton = new QPushButton("全部清除", this);
+  clearButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-	auto hLayout = new QHBoxLayout();
-	hLayout->setSizeConstraint(QLayout::SetFixedSize);
-	hLayout->addWidget(label);
-	hLayout->addWidget(clearButton);
+  auto hLayout = new QHBoxLayout();
+  hLayout->setSizeConstraint(QLayout::SetFixedSize);
+  hLayout->addWidget(label);
+  hLayout->addWidget(clearButton);
 
-	auto layout = new QVBoxLayout(this);
-	layout->addLayout(hLayout);
-	layout->addWidget(listWidget);
+  auto layout = new QVBoxLayout(this);
+  layout->addLayout(hLayout);
+  layout->addWidget(listWidget);
 
-	// 屏蔽水平滚动条
-	listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  // 屏蔽水平滚动条
+  listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-	SetShortcut();
-	CreateTrayAction();
-	InitTrayMenu();
+  SetShortcut();
+  CreateTrayAction();
+  InitTrayMenu();
 
-	qApp->installEventFilter(this);
+  qApp->installEventFilter(this);
 
-	connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
-	connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem* item)
-	{
-		Item* widget = qobject_cast<Item*>(listWidget->itemWidget(item));
+  connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
+  connect(listWidget, &QListWidget::itemClicked, this,
+          [this](QListWidgetItem *item) {
+            Item *widget = qobject_cast<Item *>(listWidget->itemWidget(item));
 
-		if (auto text = widget->GetText();!text.isEmpty()) {
-			SetClipboardText(text);
-			this->hide();
-			return;
-		}
+            if (auto text = widget->GetText(); !text.isEmpty()) {
+              SetClipboardText(text);
+              this->hide();
+              return;
+            }
 
-		if (auto image = widget->GetImage();!image.isNull()) {
-			SetClipboardImage(image);
-			this->hide();
-			return;
-		}
-	});
+            if (auto image = widget->GetImage(); !image.isNull()) {
+              SetClipboardImage(image);
+              this->hide();
+              return;
+            }
+          });
 
-	connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
+  connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
 }
 
-Clipboard::~Clipboard()
-{
+Clipboard::~Clipboard() {}
+void Clipboard::DataChanged() {
+  if (clipboard->text().isEmpty()) {
+    return;
+  }
 
+  QVariant data;
+  QByteArray hashValue;
+  const QMimeData *mimeData = clipboard->mimeData();
+
+  if (mimeData->hasText()) {
+    latestText = mimeData->text();
+    data.setValue(latestText);
+    hashValue =
+        QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
+    if (hashItems.contains(hashValue)) {
+      qWarning() << "text exist";
+      return;
+    }
+  } else if (mimeData->hasImage()) {
+    // 将图片数据转为QImage
+    auto image = qvariant_cast<QImage>(mimeData->imageData());
+    QByteArray ba;
+    QBuffer buffer(&ba);
+    image.save(&buffer, "PNG");
+    hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
+
+    if (hashItems.contains(hashValue)) {
+      qWarning() << "image exist";
+      return;
+    }
+
+    data.setValue(image);
+  }
+
+  hashItems.insert(hashValue);
+
+  AddData(data, hashValue);
 }
-void Clipboard::DataChanged()
-{
-	if (clipboard->text().isEmpty()) {
-		return;
-	}
-
-	QVariant data;
-	QByteArray hashValue;
-	const QMimeData* mimeData = clipboard->mimeData();
-
-	if (mimeData->hasText()) {
-		latestText = mimeData->text();
-		data.setValue(latestText);
-		hashValue = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
-		if (hashItems.contains(hashValue)) {
-			qWarning() << "text exist";
-			return;
-		}
-	}
-	else if (mimeData->hasImage()) {
-		// 将图片数据转为QImage
-		auto image = qvariant_cast<QImage>(mimeData->imageData());
-		QByteArray ba;
-		QBuffer buffer(&ba);
-		image.save(&buffer, "PNG");
-		hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
-
-		if (hashItems.contains(hashValue)) {
-			qWarning() << "image exist";
-			return;
-		}
-
-		data.setValue(image);
-	}
-
-	hashItems.insert(hashValue);
-
-	AddData(data, hashValue);
+void Clipboard::ClearItems() {
+  listWidget->clear();
+  clipboard->clear();
+  hashItems.clear();
 }
-void Clipboard::ClearItems()
-{
-	listWidget->clear();
-	clipboard->clear();
-	hashItems.clear();
-}
-void Clipboard::RemoveItem(QListWidgetItem* item)
-{
-	Item* widget = qobject_cast<Item*>(listWidget->itemWidget(item));
-	auto value = widget->GetHashValue();
-	hashItems.remove(value);
+void Clipboard::RemoveItem(QListWidgetItem *item) {
+  Item *widget = qobject_cast<Item *>(listWidget->itemWidget(item));
+  auto value = widget->GetHashValue();
+  hashItems.remove(value);
 
-	listWidget->removeItemWidget(item);
-	// need to delete it, otherwise it will not disappear from the listWidget
-	delete item;
+  listWidget->removeItemWidget(item);
+  // need to delete it, otherwise it will not disappear from the listWidget
+  delete item;
 }
-void Clipboard::StayOnTop()
-{
-	activateWindow();
-	show();
+void Clipboard::StayOnTop() {
+  activateWindow();
+  show();
 }
-void Clipboard::InitTrayMenu()
-{
-	//TODO:update icon
-	trayIcon->setIcon(QIcon(":/resources/images/clipboard2.svg"));
-	// 在右键时，弹出菜单。
-	trayIcon->setContextMenu(trayMenu);
+void Clipboard::InitTrayMenu() {
+  // TODO:update icon
+  trayIcon->setIcon(QIcon(":/resources/images/clipboard2.svg"));
+  // 在右键时，弹出菜单。
+  trayIcon->setContextMenu(trayMenu);
 #if defined(Q_OS_WIN32)
-	trayIcon->show();
+  trayIcon->show();
 #endif
-	// Windows show()之后才生效
-	trayIcon->setToolTip("QClipboard");
-	// 在系统拖盘增加图标时显示提示信息
-	trayIcon->showMessage("QClipboard 剪贴板", "已隐藏至系统托盘");
+  // Windows show()之后才生效
+  trayIcon->setToolTip("QClipboard");
+  // 在系统拖盘增加图标时显示提示信息
+  trayIcon->showMessage("QClipboard 剪贴板", "已隐藏至系统托盘");
 #if defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
-	trayIcon->show();
+  trayIcon->show();
 #endif
-	connect(trayIcon, &QSystemTrayIcon::activated, this, &Clipboard::TrayIconActivated);
+  connect(trayIcon, &QSystemTrayIcon::activated, this,
+          &Clipboard::TrayIconActivated);
 }
-void Clipboard::CreateTrayAction()
-{
-	auto aboutAction = new QAction("关于");
-	auto exitAction = new QAction("退出");
+void Clipboard::CreateTrayAction() {
+  auto aboutAction = new QAction("关于");
+  auto exitAction = new QAction("退出");
 
-	aboutAction->setIcon(QIcon(":/resources/images/info.svg"));
-	exitAction->setIcon(QIcon(":/resources/images/power.svg"));
+  aboutAction->setIcon(QIcon(":/resources/images/info.svg"));
+  exitAction->setIcon(QIcon(":/resources/images/power.svg"));
 
-	trayMenu->addAction(aboutAction);
-	trayMenu->addSeparator();
-	trayMenu->addAction(exitAction);
+  trayMenu->addAction(aboutAction);
+  trayMenu->addSeparator();
+  trayMenu->addAction(exitAction);
 
-	connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
+  connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
 
-	connect(aboutAction, &QAction::triggered, this, []
-	{
-		AboutDialog aboutDialog;
-		aboutDialog.exec();
-	});
+  connect(aboutAction, &QAction::triggered, this, [] {
+    AboutDialog aboutDialog;
+    aboutDialog.exec();
+  });
 }
-void Clipboard::SetShortcut()
-{
-	hotkey->setShortcut(QKeySequence("Alt+V"), true);
-	connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
+void Clipboard::SetShortcut() {
+  hotkey->setShortcut(QKeySequence("Alt+V"), true);
+  connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
 
-void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason)
-{
-	switch (reason) {
-	case QSystemTrayIcon::Trigger:
-	case QSystemTrayIcon::DoubleClick: {
-		this->showNormal();
-	}
-		break;
+void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
+  switch (reason) {
+  case QSystemTrayIcon::Trigger:
+  case QSystemTrayIcon::DoubleClick: {
+    this->showNormal();
+  } break;
 
-	default:
-		break;
-	}
+  default:
+    break;
+  }
 }
-void Clipboard::AddData(const QVariant& data, const QByteArray& hash)
-{
-	auto listItem = new QListWidgetItem();
-	listItem->setSizeHint(QSize(300, 80));
-	auto item = new Item(this);
-	item->SetData(data, hash);
-	item->SetListWidgetItem(listItem);
+void Clipboard::AddData(const QVariant &data, const QByteArray &hash) {
+  auto listItem = new QListWidgetItem();
+  listItem->setSizeHint(QSize(300, 80));
+  auto item = new Item(this);
+  item->SetData(data, hash);
+  item->SetListWidgetItem(listItem);
 
-	connect(item, &Item::deleteButtonClickedSignal, this, &Clipboard::RemoveItem);
+  connect(item, &Item::deleteButtonClickedSignal, this, &Clipboard::RemoveItem);
 
-	// 始终头插，且QListWidgetItem不能指定QListWidget为父对象
-	listWidget->insertItem(0, listItem);
-	listWidget->setItemWidget(listItem, item);
+  // 始终头插，且QListWidgetItem不能指定QListWidget为父对象
+  listWidget->insertItem(0, listItem);
+  listWidget->setItemWidget(listItem, item);
 }
-void Clipboard::SetClipboardText(const QString& text)
-{
-	clipboard->setText(text);
+void Clipboard::SetClipboardText(const QString &text) {
+  clipboard->setText(text);
 }
-void Clipboard::SetClipboardImage(const QImage& image)
-{
-	clipboard->setImage(image);
+void Clipboard::SetClipboardImage(const QImage &image) {
+  clipboard->setImage(image);
 }
 
-void Clipboard::closeEvent(QCloseEvent* event)
-{
-	hide();
-	event->ignore();
+void Clipboard::closeEvent(QCloseEvent *event) {
+  hide();
+  event->ignore();
 }
-bool Clipboard::eventFilter(QObject* obj, QEvent* event)
-{
-	// 窗口停用
-	if (QEvent::WindowDeactivate == event->type())
-	{
-		hide();
-		return true;
-	}
+bool Clipboard::eventFilter(QObject *obj, QEvent *event) {
+  // 窗口停用
+  if (QEvent::WindowDeactivate == event->type()) {
+    hide();
+    return true;
+  }
 
-	return QWidget::eventFilter(obj, event);
+  return QWidget::eventFilter(obj, event);
 }
