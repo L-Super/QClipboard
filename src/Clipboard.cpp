@@ -145,16 +145,11 @@ void Clipboard::InitTrayMenu() {
   trayIcon->setIcon(QIcon(":/resources/images/clipboard2.svg"));
   // 在右键时，弹出菜单。
   trayIcon->setContextMenu(trayMenu);
-#if defined(Q_OS_WIN32)
-  trayIcon->show();
-#endif
-  // Windows show()之后才生效
   trayIcon->setToolTip("QClipboard");
+  trayIcon->show();
   // 在系统拖盘增加图标时显示提示信息
   trayIcon->showMessage("QClipboard 剪贴板", "已隐藏至系统托盘");
-#if defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
-  trayIcon->show();
-#endif
+
   connect(trayIcon, &QSystemTrayIcon::activated, this,
           &Clipboard::TrayIconActivated);
 }
@@ -180,7 +175,6 @@ void Clipboard::SetShortcut() {
   hotkey->setShortcut(QKeySequence("Alt+V"), true);
   connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
-
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   switch (reason) {
   case QSystemTrayIcon::Trigger:

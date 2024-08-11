@@ -34,20 +34,7 @@ jobs:
         os: [ubuntu-latest, ubuntu-20.04]
         qt_version: [5.15.2]
         build_type: [Release]
-        cpp_compiler: [g++, clang++]
-        include:
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-          - os: ubuntu-20.04
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-20.04
-            c_compiler: clang
-            cpp_compiler: clang++
+
         # exclude:
         #   - os: windows-latest
         #     c_compiler: gcc
@@ -61,21 +48,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-          
-      # - name: Cache Qt
-      #   id: cache-qt
-      #   uses: actions/cache@v3
-      #   with:
-      #     # github.workspace: /home/runner/work/QClipboard/QClipboard/
-      #     path: ${{ github.workspace }}/Qt
-      #     key: ${{ runner.os }}-QtCache
 
       - name: Install Qt
-      # if: steps.cache-qt.outputs.cache-hit != 'true'
         uses: jurplel/install-qt-action@v3
         with:
           # default is 5.15.2
           version: ${{ matrix.qt_version }}
+          cache: true
+          cache-key-prefix: 'Qt'
       #     # default path: /home/runner/work/QClipboard/Qt/5.15.2/
       #     # change default path to /home/runner/work/QClipboard/QClipboard/Qt/
       #     dir: "${{ github.workspace }}"
@@ -99,11 +79,11 @@ jobs:
       - name: Build
         # Build your program with the given configuration. 
         # Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-        run: cmake --build ${{github.workspace}}/build --config ${{ matrix.build_type }}
+        run: cmake --build ${{github.workspace}}/build
 
       - name: Test
         working-directory: ${{github.workspace}}/build
         # Execute tests defined by the CMake configuration. 
         # Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
         # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-        run: ctest --build-config ${{ matrix.build_type }}
+        run: ctest
