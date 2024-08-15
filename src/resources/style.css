@@ -76,17 +76,6 @@ QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
     background: none;  
 }
 
-
-
-
-
-
-
-
-
-
-
-
 QScrollBar:vertical:hover {  
     border: none; /* 移除边框 */  
     background: transparent; /* 背景透明 */  
