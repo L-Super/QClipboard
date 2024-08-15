@@ -44,7 +44,6 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: none; /* 滑动区域背景 */  
 }  
   
-/* 横向滚动条样式 */  
 QScrollBar:horizontal {  
     border: none;  
     background: transparent;  
