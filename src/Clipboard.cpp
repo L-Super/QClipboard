@@ -25,10 +25,9 @@
 #include <QVBoxLayout>
 
 // TODO:
-//  1. 美化垂直滚动条
-//  2. 设置不冲突的快捷键,增加配置文件，支持更改快捷键
-//  3. macOS适配
-//  4. 点击item时，自动在光标处粘贴
+//  1. 设置不冲突的快捷键, 考虑增加配置文件，支持更改快捷键
+//  2. macOS适配
+//  3. 点击item时，自动在光标处粘贴
 
 Clipboard::Clipboard(QWidget *parent)
     : QWidget(parent), clipboard(QApplication::clipboard()),
@@ -84,6 +83,7 @@ Clipboard::Clipboard(QWidget *parent)
 }
 
 Clipboard::~Clipboard() {}
+
 void Clipboard::DataChanged() {
   if (clipboard->text().isEmpty()) {
     return;
@@ -122,11 +122,13 @@ void Clipboard::DataChanged() {
 
   AddData(data, hashValue);
 }
+
 void Clipboard::ClearItems() {
   listWidget->clear();
   clipboard->clear();
   hashItems.clear();
 }
+
 void Clipboard::RemoveItem(QListWidgetItem *item) {
   Item *widget = qobject_cast<Item *>(listWidget->itemWidget(item));
   auto value = widget->GetHashValue();
@@ -136,10 +138,12 @@ void Clipboard::RemoveItem(QListWidgetItem *item) {
   // need to delete it, otherwise it will not disappear from the listWidget
   delete item;
 }
+
 void Clipboard::StayOnTop() {
   activateWindow();
   show();
 }
+
 void Clipboard::InitTrayMenu() {
   // TODO:update icon
   trayIcon->setIcon(QIcon(":/resources/images/clipboard2.svg"));
@@ -153,6 +157,7 @@ void Clipboard::InitTrayMenu() {
   connect(trayIcon, &QSystemTrayIcon::activated, this,
           &Clipboard::TrayIconActivated);
 }
+
 void Clipboard::CreateTrayAction() {
   auto aboutAction = new QAction("关于");
   auto exitAction = new QAction("退出");
@@ -171,10 +176,17 @@ void Clipboard::CreateTrayAction() {
     aboutDialog.exec();
   });
 }
+
 void Clipboard::SetShortcut() {
-  hotkey->setShortcut(QKeySequence("Alt+V"), true);
+  auto isSuccess = hotkey->setShortcut(QKeySequence("Alt+V"), true);
+  // TODO: add tips and change shortcut
+  if(!isSuccess)
+  {
+      qCritical() << "set shortcut failed";
+  }
   connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
+
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   switch (reason) {
   case QSystemTrayIcon::Trigger:
@@ -186,6 +198,7 @@ void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
     break;
   }
 }
+
 void Clipboard::AddData(const QVariant &data, const QByteArray &hash) {
   auto listItem = new QListWidgetItem();
   listItem->setSizeHint(QSize(300, 80));
@@ -199,9 +212,11 @@ void Clipboard::AddData(const QVariant &data, const QByteArray &hash) {
   listWidget->insertItem(0, listItem);
   listWidget->setItemWidget(listItem, item);
 }
+
 void Clipboard::SetClipboardText(const QString &text) {
   clipboard->setText(text);
 }
+
 void Clipboard::SetClipboardImage(const QImage &image) {
   clipboard->setImage(image);
 }
@@ -210,6 +225,7 @@ void Clipboard::closeEvent(QCloseEvent *event) {
   hide();
   event->ignore();
 }
+
 bool Clipboard::eventFilter(QObject *obj, QEvent *event) {
   // 窗口停用
   if (QEvent::WindowDeactivate == event->type()) {

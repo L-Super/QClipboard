@@ -37,6 +37,7 @@ Item::Item(const QString &text, QWidget *parent)
 }
 
 Item::~Item() { delete ui; }
+
 void Item::SetData(const QVariant &data, const QByteArray &hash) {
   auto type = data.userType();
 
@@ -54,17 +55,23 @@ void Item::SetData(const QVariant &data, const QByteArray &hash) {
 
   hashValue = hash;
 }
+
 void Item::SetText(const QString &text) { ui->label->setText(text); }
+
 QString Item::GetText() { return ui->label->text(); }
 
 void Item::SetListWidgetItem(QListWidgetItem *listWidgetItem) {
   listItem = listWidgetItem;
 }
+
 QListWidgetItem *Item::GetListWidgetItem() {
   return listItem == nullptr ? nullptr : listItem;
 }
+
 void Item::DeleteButtonClicked() {
   emit deleteButtonClickedSignal(GetListWidgetItem());
 }
+
 QImage Item::GetImage() { return latestImage; }
+
 QByteArray Item::GetHashValue() { return hashValue; }
