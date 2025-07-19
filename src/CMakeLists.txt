@@ -43,24 +43,19 @@ else ()
     endif ()
 endif ()
 
-#include(FetchContent)
-#FetchContent_Declare(QHotkey
-#        GIT_REPOSITORY https://github.com/Skycoder42/QHotkey
-#        SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/QHotkey
-#        DOWNLOAD_EXTRACT_TIMESTAMP true)
-#
-#FetchContent_MakeAvailable(QHotkey)
-#FetchContent_Declare(SingleApplication
-#        URL https://github.com/itay-grudev/SingleApplication/archive/refs/heads/master.zip
-#        SOURCE_DIR ${CMAKE_SOURCE_DIR}/third_party/SingleApplication
-#        DOWNLOAD_EXTRACT_TIMESTAMP true)
-#FetchContent_MakeAvailable(SingleApplication)
-
 # for SingleApplication
 set(QAPPLICATION_CLASS QApplication CACHE STRING "Inheritance class for SingleApplication")
 
-add_subdirectory(third_party/QHotkey)
-add_subdirectory(third_party/SingleApplication)
+include(FetchContent)
+FetchContent_Declare(QHotkey
+        GIT_REPOSITORY https://github.com/Skycoder42/QHotkey)
+
+FetchContent_MakeAvailable(QHotkey)
+FetchContent_Declare(SingleApplication
+        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.2.tar.gz)
+FetchContent_MakeAvailable(SingleApplication)
+
+
 
 target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core

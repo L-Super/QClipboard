@@ -15,40 +15,42 @@ class QListWidget;
 class QListWidgetItem;
 
 class Clipboard : public QWidget {
-  Q_OBJECT
+    Q_OBJECT
 
-public:
-  explicit Clipboard(QWidget *parent = nullptr);
-  ~Clipboard() override;
+  public:
+    explicit Clipboard(QWidget *parent = nullptr);
+    ~Clipboard() override;
 
-protected:
-  void AddData(const QVariant &data, const QByteArray &hash);
+  protected:
+    void AddData(const QVariant &data, const QByteArray &hash);
+    void MoveDataToFront(const QByteArray &hash);
 
-protected slots:
-  void DataChanged();
-  void ClearItems();
-  void RemoveItem(QListWidgetItem *item);
-  void StayOnTop();
-  void TrayIconActivated(QSystemTrayIcon::ActivationReason reason);
-  void SetClipboardText(const QString &text);
-  void SetClipboardImage(const QImage &image);
+  protected slots:
+    void DataChanged();
+    void ClearItems();
+    void RemoveItem(QListWidgetItem *item);
+    void StayOnTop();
+    void TrayIconActivated(QSystemTrayIcon::ActivationReason reason);
+    void SetClipboardText(const QString &text) const;
+    void SetClipboardImage(const QImage &image) const;
 
-private:
-  void InitTrayMenu();
-  void CreateTrayAction();
-  void SetShortcut();
+  private:
+    void InitTrayMenu();
+    void CreateTrayAction();
+    void SetShortcut();
 
-protected:
-  void closeEvent(QCloseEvent *event) override;
-  bool eventFilter(QObject *obj, QEvent *event) override;
+  protected:
+    void closeEvent(QCloseEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
-private:
-  QClipboard *clipboard;
-  QSystemTrayIcon *trayIcon;
-  QMenu *trayMenu;
-  QHotkey *hotkey;
-  QString latestText;
-  QByteArray latestHashValue;
-  QListWidget *listWidget;
-  QSet<QByteArray> hashItems;
+  private:
+    QClipboard *clipboard;
+    QSystemTrayIcon *trayIcon;
+    QMenu *trayMenu;
+    QHotkey *hotkey;
+    QString latestText;
+    QByteArray latestHashValue;
+    QListWidget *listWidget;
+    QSet<QByteArray> hashItems;
+    QHash<QByteArray, QListWidgetItem *> hashItemMap;
 };

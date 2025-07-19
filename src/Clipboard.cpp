@@ -98,10 +98,6 @@ void Clipboard::DataChanged() {
     data.setValue(latestText);
     hashValue =
         QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
-    if (hashItems.contains(hashValue)) {
-      qWarning() << "text exist";
-      return;
-    }
   } else if (mimeData->hasImage()) {
     // 将图片数据转为QImage
     auto image = qvariant_cast<QImage>(mimeData->imageData());
@@ -110,15 +106,14 @@ void Clipboard::DataChanged() {
     image.save(&buffer, "PNG");
     hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
 
-    if (hashItems.contains(hashValue)) {
-      qWarning() << "image exist";
-      return;
-    }
-
     data.setValue(image);
   }
 
-  hashItems.insert(hashValue);
+  // 如果已存在，则把对应 item 搬到最前面
+  if (hashItemMap.contains(hashValue)) {
+    MoveDataToFront(hashValue);
+    return;
+  }
 
   AddData(data, hashValue);
 }
@@ -133,6 +128,7 @@ void Clipboard::RemoveItem(QListWidgetItem *item) {
   Item *widget = qobject_cast<Item *>(listWidget->itemWidget(item));
   auto value = widget->GetHashValue();
   hashItems.remove(value);
+  hashItemMap.remove(value);
 
   listWidget->removeItemWidget(item);
   // need to delete it, otherwise it will not disappear from the listWidget
@@ -180,9 +176,8 @@ void Clipboard::CreateTrayAction() {
 void Clipboard::SetShortcut() {
   auto isSuccess = hotkey->setShortcut(QKeySequence("Alt+V"), true);
   // TODO: add tips and change shortcut
-  if(!isSuccess)
-  {
-      qCritical() << "set shortcut failed";
+  if (!isSuccess) {
+    qCritical() << "set shortcut failed";
   }
   connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
@@ -211,13 +206,27 @@ void Clipboard::AddData(const QVariant &data, const QByteArray &hash) {
   // 始终头插，且QListWidgetItem不能指定QListWidget为父对象
   listWidget->insertItem(0, listItem);
   listWidget->setItemWidget(listItem, item);
+
+  // 记录 hash 与 listItem 的映射
+  hashItems.insert(hash);
+  hashItemMap.insert(hash, listItem);
 }
 
-void Clipboard::SetClipboardText(const QString &text) {
+void Clipboard::MoveDataToFront(const QByteArray &hashValue) {
+  auto listItem = hashItemMap.value(hashValue);
+  auto widget = listWidget->itemWidget(listItem);
+  int row = listWidget->row(listItem);
+
+  listWidget->takeItem(row);
+  listWidget->insertItem(0, listItem);
+  listWidget->setItemWidget(listItem, widget);
+}
+
+void Clipboard::SetClipboardText(const QString &text) const {
   clipboard->setText(text);
 }
 
-void Clipboard::SetClipboardImage(const QImage &image) {
+void Clipboard::SetClipboardImage(const QImage &image) const {
   clipboard->setImage(image);
 }
 

@@ -11,3 +11,4 @@ build/
 CMakeLists.txt.user
 
 src/version.h
+.DS_Store
