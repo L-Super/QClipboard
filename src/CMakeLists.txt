@@ -6,7 +6,7 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets REQUIRED)
 if (WIN32)
     get_target_property(QmakeExecutable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
     get_filename_component(QtBinDir "${QmakeExecutable}" DIRECTORY)
-    find_program(DEPLOYQT_EXECUTABLE windeployqt HINTS "${QtBinDir}")
+    find_program(DEPLOY_QT_EXECUTABLE windeployqt macdeployqt HINTS "${QtBinDir}")
 endif ()
 
 set(SRC_FILES
@@ -56,7 +56,6 @@ FetchContent_Declare(SingleApplication
 FetchContent_MakeAvailable(SingleApplication)
 
 
-
 target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
@@ -69,9 +68,16 @@ target_link_libraries(QClipboard
 if (WIN32)
     add_custom_command(TARGET ${PROJECT_NAME}
             POST_BUILD
-            COMMAND ${DEPLOYQT_EXECUTABLE}
+            COMMAND ${DEPLOY_QT_EXECUTABLE}
             --no-translations
             # --no-compiler-runtime
             $<TARGET_FILE:${PROJECT_NAME}>
+    )
+elseif (APPLE)
+    add_custom_command(TARGET ${PROJECT_NAME}
+            POST_BUILD
+            COMMAND ${QT_DEPLOY_EXECUTABLE}
+            "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>"
+            # -dmg
     )
 endif ()
