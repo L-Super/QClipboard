@@ -1,7 +1,7 @@
 configure_file(version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h @ONLY)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Gui Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Gui Widgets Network WebSockets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets Network WebSockets REQUIRED)
 
 get_target_property(QmakeExecutable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
 get_filename_component(QtBinDir "${QmakeExecutable}" DIRECTORY)
@@ -12,6 +12,11 @@ set(SRC_FILES
         Clipboard.cpp Clipboard.h
         Item.cpp Item.h Item.ui
         AboutDialog.cpp AboutDialog.h AboutDialog.ui
+        net/ClipboardApiClient.cpp net/ClipboardApiClient.h
+        net/ClipboardWebSocketClient.cpp
+        net/ClipboardWebSocketClient.h
+        net/SyncServer.cpp
+        net/SyncServer.h
 )
 set(RES_FILES Clipboard.qrc)
 
@@ -39,20 +44,25 @@ set(QAPPLICATION_CLASS QApplication CACHE STRING "Inheritance class for SingleAp
 
 include(FetchContent)
 FetchContent_Declare(QHotkey
-        GIT_REPOSITORY https://github.com/Skycoder42/QHotkey)
-
-FetchContent_MakeAvailable(QHotkey)
+        URL https://github.com/Skycoder42/QHotkey/archive/refs/tags/1.5.0.tar.gz
+)
 FetchContent_Declare(SingleApplication
-        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.2.tar.gz)
-FetchContent_MakeAvailable(SingleApplication)
-
+        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.2.tar.gz
+)
+FetchContent_Declare(magic_enum
+        GIT_REPOSITORY https://github.com/Neargye/magic_enum
+)
+FetchContent_MakeAvailable(QHotkey SingleApplication magic_enum)
 
 target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Network
+        Qt${QT_VERSION_MAJOR}::WebSockets
         QHotkey::QHotkey
         SingleApplication::SingleApplication
+        magic_enum::magic_enum
 )
 
 # Deploy the Qt Application

@@ -1,0 +1,87 @@
+#include "ClipboardWebSocketClient.h"
+#include <QDebug>
+
+ClipboardWebSocketClient::ClipboardWebSocketClient(const QUrl &url, QObject *parent)
+    : QObject(parent),
+      serverUrl(url)
+{
+    // 连接底层信号
+    connect(&webSocket, &QWebSocket::connected,
+            this, &ClipboardWebSocketClient::onConnected);
+    connect(&webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
+            this, &ClipboardWebSocketClient::onError);
+    connect(&webSocket, &QWebSocket::disconnected,
+            this, &ClipboardWebSocketClient::onDisconnected);
+
+    // 重连定时器
+    reconnectTimer.setInterval(reconnectIntervalMs);
+    reconnectTimer.setSingleShot(true);
+    connect(&reconnectTimer, &QTimer::timeout,
+            this, &ClipboardWebSocketClient::tryReconnect);
+}
+
+ClipboardWebSocketClient::~ClipboardWebSocketClient() {
+    disconnectFromServer();
+}
+
+void ClipboardWebSocketClient::connectToServer() {
+    if (webSocket.state() == QAbstractSocket::ConnectedState ||
+        webSocket.state() == QAbstractSocket::ConnectingState) {
+        return;
+    }
+    qDebug() << "Connecting to" << serverUrl.toString();
+    webSocket.open(serverUrl);
+}
+
+void ClipboardWebSocketClient::disconnectFromServer() {
+    reconnectTimer.stop();
+    webSocket.close();
+}
+
+void ClipboardWebSocketClient::onConnected() {
+    qDebug() << "WebSocket connected.";
+    emit connected();
+
+    // 订阅 /sync/notify（如果服务端需要额外握手可以在这里发送订阅消息）
+    // webSocket.sendTextMessage(QStringLiteral("{\"action\":\"subscribe\",\"topic\":\"/sync/notify\"}"));
+
+    // 监听消息
+    connect(&webSocket, &QWebSocket::textMessageReceived,
+            this, &ClipboardWebSocketClient::onTextMessageReceived);
+    connect(&webSocket, &QWebSocket::binaryMessageReceived,
+            this, &ClipboardWebSocketClient::onBinaryMessageReceived);
+}
+
+void ClipboardWebSocketClient::onTextMessageReceived(const QString &message) {
+    qDebug() << "Text message:" << message;
+    emit notifyMessageReceived(message);
+}
+
+void ClipboardWebSocketClient::onBinaryMessageReceived(const QByteArray &message) {
+    qDebug() << "Binary message received; length =" << message.size();
+    // 如果服务端以二进制发推送，可以转换成 QString 或 QJsonDocument
+    emit notifyMessageReceived(QString::fromUtf8(message));
+}
+
+void ClipboardWebSocketClient::onError(QAbstractSocket::SocketError error) {
+    qWarning() << "WebSocket error:" << webSocket.errorString();
+    emit errorOccurred(error);
+
+    // 启动重连
+    if (!reconnectTimer.isActive())
+        reconnectTimer.start();
+}
+
+void ClipboardWebSocketClient::onDisconnected() {
+    qDebug() << "WebSocket disconnected.";
+    emit disconnected();
+
+    // 尝试重连
+    if (!reconnectTimer.isActive())
+        reconnectTimer.start();
+}
+
+void ClipboardWebSocketClient::tryReconnect() {
+    qDebug() << "Reconnecting...";
+    connectToServer();
+}

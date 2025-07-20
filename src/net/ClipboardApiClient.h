@@ -1,0 +1,44 @@
+#pragma once
+
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QObject>
+#include <QUrl>
+
+#include "ClipboardStruct.h"
+
+class ClipboardApiClient : public QObject {
+  Q_OBJECT
+
+public:
+  explicit ClipboardApiClient(const QUrl &baseUrl, QObject *parent = nullptr);
+  ~ClipboardApiClient() override;
+
+  // 注册新用户
+  void registerUser(const QString &email, const QString &password);
+
+  // 登录（成功后可获得访问 token）
+  void login(const User &user);
+
+  // 上传剪贴板数据（二进制），需要携带已登录的 token
+  void uploadClipboard(const ClipboardData &data, const QString &authToken);
+
+signals:
+  void registrationFinished(bool success, const QString &message);
+  void loginFinished(bool success, const Token &token, const QString &message);
+  void uploadFinished(bool success, const QString &message);
+
+private slots:
+  // 统一处理所有 reply
+  void onNetworkReply(QNetworkReply *reply);
+
+private:
+  enum class Endpoint { Register, Login, Upload };
+  void handleJsonResponse(QNetworkReply *reply, Endpoint ep);
+
+private:
+  QNetworkAccessManager *manager;
+  QUrl baseUrl;
+
+  QHash<QNetworkReply *, Endpoint> replyMap;
+};

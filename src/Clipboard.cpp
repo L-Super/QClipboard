@@ -6,6 +6,7 @@
 #include "AboutDialog.h"
 #include "Item.h"
 #include "QHotkey"
+#include "net/SyncServer.h"
 
 #include <QAction>
 #include <QApplication>
@@ -82,6 +83,12 @@ Clipboard::Clipboard(QWidget *parent)
           });
 
   connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
+
+  // TODO:
+  QUrl apiUrl("http://yourserver.com");
+  QUrl wsUrl("ws://yourserver.com/sync/notify");
+
+  sync = new SyncServer(apiUrl, wsUrl);
 }
 
 Clipboard::~Clipboard() {}
