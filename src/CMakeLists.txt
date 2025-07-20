@@ -3,11 +3,9 @@ configure_file(version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h @ONLY)
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Gui Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets REQUIRED)
 
-if (WIN32)
-    get_target_property(QmakeExecutable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
-    get_filename_component(QtBinDir "${QmakeExecutable}" DIRECTORY)
-    find_program(DEPLOY_QT_EXECUTABLE windeployqt macdeployqt HINTS "${QtBinDir}")
-endif ()
+get_target_property(QmakeExecutable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+get_filename_component(QtBinDir "${QmakeExecutable}" DIRECTORY)
+find_program(DEPLOY_QT_EXECUTABLE windeployqt macdeployqt HINTS "${QtBinDir}")
 
 set(SRC_FILES
         main.cpp
@@ -17,30 +15,23 @@ set(SRC_FILES
 )
 set(RES_FILES Clipboard.qrc)
 
-if (WINDOWS)
+add_executable(${PROJECT_NAME}
+        ${SRC_FILES}
+        ${RES_FILES}
+)
+
+if (WIN32)
     if (CMAKE_BUILD_TYPE STREQUAL "Release")
-        add_executable(${PROJECT_NAME} WIN32
-                ${SRC_FILES}
-                ${RES_FILES}
-        )
-    else ()
-        add_executable(${PROJECT_NAME}
-                ${SRC_FILES}
-                ${RES_FILES}
-        )
+        set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
     endif ()
-else ()
-    add_executable(${PROJECT_NAME}
-            ${SRC_FILES}
-            ${RES_FILES}
+elseif (APPLE)
+    set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
+elseif (UNIX AND NOT APPLE)
+    set_target_properties(${PROJECT_NAME}
+            PROPERTIES
+            INSTALL_RPATH "$ORIGIN:$ORIGIN.:$ORIGIN/lib"
+            BUILD_WITH_INSTALL_RPATH TRUE
     )
-    if (UNIX AND NOT APPLE)
-        set_target_properties(${PROJECT_NAME}
-                PROPERTIES
-                INSTALL_RPATH "$ORIGIN:$ORIGIN.:$ORIGIN/lib"
-                BUILD_WITH_INSTALL_RPATH TRUE
-        )
-    endif ()
 endif ()
 
 # for SingleApplication
@@ -76,7 +67,7 @@ if (WIN32)
 elseif (APPLE)
     add_custom_command(TARGET ${PROJECT_NAME}
             POST_BUILD
-            COMMAND ${QT_DEPLOY_EXECUTABLE}
+            COMMAND ${DEPLOY_QT_EXECUTABLE}
             "$<TARGET_BUNDLE_DIR:${PROJECT_NAME}>"
             # -dmg
     )
