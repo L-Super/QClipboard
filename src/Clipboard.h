@@ -13,6 +13,7 @@ class QHotkey;
 class QClipboard;
 class QListWidget;
 class QListWidgetItem;
+class SyncServer;
 
 class Clipboard : public QWidget {
     Q_OBJECT
@@ -51,4 +52,5 @@ class Clipboard : public QWidget {
     QListWidget *listWidget;
     QSet<QByteArray> hashItems;
     QHash<QByteArray, QListWidgetItem *> hashItemMap;
+    SyncServer* sync;
 };
