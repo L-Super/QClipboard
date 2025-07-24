@@ -22,8 +22,8 @@ class Clipboard : public QWidget {
     ~Clipboard() override;
 
   protected:
-    void AddData(const QVariant &data, const QByteArray &hash);
-    void MoveDataToFront(const QByteArray &hash);
+    void AddItem(const QVariant &data, const QByteArray &hash);
+    void MoveItemToTop(const QByteArray &hash);
 
   protected slots:
     void DataChanged();
@@ -31,8 +31,6 @@ class Clipboard : public QWidget {
     void RemoveItem(QListWidgetItem *item);
     void StayOnTop();
     void TrayIconActivated(QSystemTrayIcon::ActivationReason reason);
-    void SetClipboardText(const QString &text) const;
-    void SetClipboardImage(const QImage &image) const;
 
   private:
     void InitTrayMenu();

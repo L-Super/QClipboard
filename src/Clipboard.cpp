@@ -32,7 +32,7 @@
 Clipboard::Clipboard(QWidget *parent)
     : QWidget(parent), clipboard(QApplication::clipboard()),
       trayIcon(new QSystemTrayIcon(this)), trayMenu(new QMenu()),
-      hotkey(new QHotkey()), listWidget(new QListWidget(this)) {
+      hotkey(new QHotkey(this)), listWidget(new QListWidget(this)) {
   setWindowOpacity(0.9);
 
   setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint |
@@ -63,19 +63,21 @@ Clipboard::Clipboard(QWidget *parent)
 
   connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
   connect(listWidget, &QListWidget::itemClicked, this,
-          [this](QListWidgetItem *item) {
-            Item *widget = qobject_cast<Item *>(listWidget->itemWidget(item));
+          [this](QListWidgetItem *listWidgetItem) {
+            Item *item =
+                qobject_cast<Item *>(listWidget->itemWidget(listWidgetItem));
 
-            if (auto text = widget->GetText(); !text.isEmpty()) {
-              SetClipboardText(text);
+            switch (item->GetMetaType()) {
+            case QMetaType::QString: {
+              clipboard->setText(item->GetText());
               this->hide();
-              return;
-            }
-
-            if (auto image = widget->GetImage(); !image.isNull()) {
-              SetClipboardImage(image);
+            } break;
+            case QMetaType::QImage: {
+              clipboard->setImage(item->GetImage());
               this->hide();
-              return;
+            } break;
+            default:
+              break;
             }
           });
 
@@ -107,15 +109,17 @@ void Clipboard::DataChanged() {
     hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
 
     data.setValue(image);
+  } else if (mimeData->hasUrls()) {
+    qDebug() << "has urls" << mimeData->urls();
   }
 
   // 如果已存在，则把对应 item 搬到最前面
   if (hashItemMap.contains(hashValue)) {
-    MoveDataToFront(hashValue);
+    MoveItemToTop(hashValue);
     return;
   }
 
-  AddData(data, hashValue);
+  AddItem(data, hashValue);
 }
 
 void Clipboard::ClearItems() {
@@ -194,7 +198,7 @@ void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   }
 }
 
-void Clipboard::AddData(const QVariant &data, const QByteArray &hash) {
+void Clipboard::AddItem(const QVariant &data, const QByteArray &hash) {
   auto listItem = new QListWidgetItem();
   listItem->setSizeHint(QSize(300, 80));
   auto item = new Item(this);
@@ -212,22 +216,21 @@ void Clipboard::AddData(const QVariant &data, const QByteArray &hash) {
   hashItemMap.insert(hash, listItem);
 }
 
-void Clipboard::MoveDataToFront(const QByteArray &hashValue) {
+void Clipboard::MoveItemToTop(const QByteArray &hashValue) {
   auto listItem = hashItemMap.value(hashValue);
-  auto widget = listWidget->itemWidget(listItem);
+  if (!listItem)
+    return;
+
   int row = listWidget->row(listItem);
+  if (row == 0)
+    return;
 
-  listWidget->takeItem(row);
-  listWidget->insertItem(0, listItem);
-  listWidget->setItemWidget(listItem, widget);
-}
+  // 把 row 移动到 parent() 下的 0 位置
+  listWidget->model()->moveRow(QModelIndex(), row, QModelIndex(), 0);
 
-void Clipboard::SetClipboardText(const QString &text) const {
-  clipboard->setText(text);
-}
-
-void Clipboard::SetClipboardImage(const QImage &image) const {
-  clipboard->setImage(image);
+  // TODO:或许指针地址改变
+  //   hashItemMap.remove(hashValue);
+  //   hashItemMap.insert(hashValue, listItem);
 }
 
 void Clipboard::closeEvent(QCloseEvent *event) {
@@ -236,11 +239,18 @@ void Clipboard::closeEvent(QCloseEvent *event) {
 }
 
 bool Clipboard::eventFilter(QObject *obj, QEvent *event) {
-  // 窗口停用
-  if (QEvent::WindowDeactivate == event->type()) {
+
+  if (event->type() == QEvent::WindowDeactivate) {
+    // 窗口停用
     hide();
     return true;
+  } else if (event->type() == QEvent::KeyPress) {
+    // 按ESC键时隐藏窗口
+    auto *keyEvent = dynamic_cast<QKeyEvent *>(event);
+    if (keyEvent->key() == Qt::Key_Escape) {
+      hide();
+      return true;
+    }
   }
-
   return QWidget::eventFilter(obj, event);
 }

@@ -31,6 +31,7 @@ class Item : public QWidget {
     QString GetText() const;
     QImage GetImage() const;
     QByteArray GetHashValue() const;
+    int GetMetaType() const;
 
   protected:
     void DeleteButtonClicked();
@@ -44,6 +45,7 @@ class Item : public QWidget {
     QListWidgetItem *listItem;
     QImage latestImage;
     QByteArray hashValue;
+    int metaType{0}; // default is UnknownType
 };
 
 #endif // ITEM_H
