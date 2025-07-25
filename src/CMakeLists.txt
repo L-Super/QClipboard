@@ -20,6 +20,8 @@ add_executable(${PROJECT_NAME}
         ${RES_FILES}
 )
 
+add_subdirectory(utils)
+
 if (WIN32)
     if (CMAKE_BUILD_TYPE STREQUAL "Release")
         set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
@@ -39,20 +41,29 @@ set(QAPPLICATION_CLASS QApplication CACHE STRING "Inheritance class for SingleAp
 
 include(FetchContent)
 FetchContent_Declare(QHotkey
-        GIT_REPOSITORY https://github.com/Skycoder42/QHotkey)
-
-FetchContent_MakeAvailable(QHotkey)
+        URL https://github.com/Skycoder42/QHotkey/archive/refs/tags/1.5.0.tar.gz
+)
 FetchContent_Declare(SingleApplication
-        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.2.tar.gz)
-FetchContent_MakeAvailable(SingleApplication)
+        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.2.tar.gz
+)
+FetchContent_Declare(magic_enum
+        GIT_REPOSITORY https://github.com/Neargye/magic_enum
+)
+FetchContent_Declare(json
+        URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
 
+FetchContent_MakeAvailable(QHotkey SingleApplication magic_enum json)
 
 target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
+        Qt${QT_VERSION_MAJOR}::Network
+        Qt${QT_VERSION_MAJOR}::WebSockets
         QHotkey::QHotkey
         SingleApplication::SingleApplication
+        magic_enum::magic_enum
+        nlohmann_json::nlohmann_json
 )
 
 # Deploy the Qt Application
