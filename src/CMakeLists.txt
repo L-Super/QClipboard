@@ -52,7 +52,10 @@ FetchContent_Declare(SingleApplication
 FetchContent_Declare(magic_enum
         GIT_REPOSITORY https://github.com/Neargye/magic_enum
 )
-FetchContent_MakeAvailable(QHotkey SingleApplication magic_enum)
+FetchContent_Declare(json
+        URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
+
+FetchContent_MakeAvailable(QHotkey SingleApplication magic_enum json)
 
 target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core
@@ -63,6 +66,7 @@ target_link_libraries(QClipboard
         QHotkey::QHotkey
         SingleApplication::SingleApplication
         magic_enum::magic_enum
+        nlohmann_json::nlohmann_json
 )
 
 # Deploy the Qt Application

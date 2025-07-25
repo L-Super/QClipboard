@@ -15,6 +15,8 @@
 #include <QCloseEvent>
 #include <QCryptographicHash>
 #include <QDebug>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QListWidget>
 #include <QListWidgetItem>
@@ -60,6 +62,17 @@ Clipboard::Clipboard(QWidget *parent)
   CreateTrayAction();
   InitTrayMenu();
 
+  // TODO:
+  QUrl apiUrl("http://127.0.0.1:8000");
+  QUrl wsUrl("ws://127.0.0.1:8000/sync/notify");
+
+  sync = std::make_unique<SyncServer>(apiUrl, wsUrl);
+  sync->login({.email = "user@example.com",
+               .password = "string",
+               .deviceId = "clipboard-id",
+               .deviceName = "QClip",
+               .deviceType = DeviceType::windows});
+
   qApp->installEventFilter(this);
 
   connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
@@ -84,11 +97,45 @@ Clipboard::Clipboard(QWidget *parent)
 
   connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
 
-  // TODO:
-  QUrl apiUrl("http://yourserver.com");
-  QUrl wsUrl("ws://yourserver.com/sync/notify");
+  connect(sync.get(), &SyncServer::registrationFinished, [] {});
+  connect(sync.get(), &SyncServer::loginFinished, [] {});
+  connect(sync.get(), &SyncServer::uploadFinished, [] {});
+  connect(sync.get(), &SyncServer::notifyMessageReceived,
+          [this](const QString &message) {
+            //{
+            //  "action":"update",
+            //  "type":"", // text, image, file
+            //  "data":"",
+            //  "data_hash":"",
+            //  "meta":{}
+            //}
 
-  sync = new SyncServer(apiUrl, wsUrl);
+            qDebug() << "websocket received:" << message;
+            try {
+              const auto doc = QJsonDocument::fromJson(message.toUtf8());
+              const auto obj = doc.object();
+              auto type = obj.value("type").toString();
+              auto compressedData = obj.value("data").toString();
+              auto data = qUncompress(compressedData.toUtf8());
+
+              if (type == "text") {
+                clipboard->setText(data);
+
+              } else if (type == "image") {
+                // TODO: support image and files in the future
+                //        QImage image = QImage::fromData(data.toUtf8());
+                //        clipboard->setImage(image);
+                //        qDebug()<<"image format"<<image.format();
+              } else if (type == "file") {
+              }
+
+            } catch (const std::exception &e) {
+              qDebug() << "" << e.what();
+            }
+          });
+  connect(sync.get(), &SyncServer::syncConnected, [] {});
+  connect(sync.get(), &SyncServer::syncDisconnected, [] {});
+  connect(sync.get(), &SyncServer::syncError, [] {});
 }
 
 Clipboard::~Clipboard() {}
@@ -100,22 +147,31 @@ void Clipboard::DataChanged() {
 
   QVariant data;
   QByteArray hashValue;
+  ClipboardData clipData;
+
   const QMimeData *mimeData = clipboard->mimeData();
+  qDebug() << "mime data type:" << mimeData->formats();
 
   if (mimeData->hasText()) {
     latestText = mimeData->text();
     data.setValue(latestText);
     hashValue =
         QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
+    clipData.type = ClipboardDataType::text;
+    clipData.data = QString::fromUtf8(qCompress(latestText.toUtf8()));
   } else if (mimeData->hasImage()) {
     // 将图片数据转为QImage
     auto image = qvariant_cast<QImage>(mimeData->imageData());
+    qDebug() << "image format" << image.format();
     QByteArray ba;
     QBuffer buffer(&ba);
     image.save(&buffer, "PNG");
     hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
 
     data.setValue(image);
+    // TODO: support image and files in the future
+    //    clipData.type = ClipboardDataType::image;
+    //    clipData.data = ba;
   } else if (mimeData->hasUrls()) {
     qDebug() << "has urls" << mimeData->urls();
   }
@@ -127,6 +183,8 @@ void Clipboard::DataChanged() {
   }
 
   AddItem(data, hashValue);
+
+  sync->uploadClipboardData(clipData);
 }
 
 void Clipboard::ClearItems() {

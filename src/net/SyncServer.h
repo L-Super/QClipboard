@@ -33,7 +33,7 @@ signals:
   void loginFinished(bool success, const Token &token, const QString &message);
   void uploadFinished(bool success, const QString &message);
 
-  // WebSocket 推送
+  // 收到 WebSocket message
   void notifyMessageReceived(const QString &message);
 
   // WebSocket 连接状态
@@ -48,7 +48,7 @@ private slots:
 private:
   QUrl apiBaseUrl;
   QUrl wsBaseUrl;
-  ClipboardApiClient *apiClient;
+  ClipboardApiClient *apiClient{};
   ClipboardWebSocketClient *wsClient{nullptr};
   QString authToken;
 };

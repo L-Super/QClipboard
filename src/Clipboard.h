@@ -7,6 +7,7 @@
 #include <QSet>
 #include <QSystemTrayIcon>
 #include <QWidget>
+#include <memory>
 
 class QMenu;
 class QHotkey;
@@ -24,7 +25,7 @@ class Clipboard : public QWidget {
 
   protected:
     void AddItem(const QVariant &data, const QByteArray &hash);
-    void MoveItemToTop(const QByteArray &hash);
+    void MoveItemToTop(const QByteArray &hashValue);
 
   protected slots:
     void DataChanged();
@@ -52,5 +53,5 @@ class Clipboard : public QWidget {
     QListWidget *listWidget;
     QSet<QByteArray> hashItems;
     QHash<QByteArray, QListWidgetItem *> hashItemMap;
-    SyncServer* sync;
+    std::unique_ptr<SyncServer> sync;
 };
