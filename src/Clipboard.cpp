@@ -140,8 +140,10 @@ void Clipboard::RemoveItem(QListWidgetItem *item) {
 }
 
 void Clipboard::StayOnTop() {
-  activateWindow();
+  // TODO: 窗口出现在输入光标位置
   show();
+  activateWindow();
+  raise();
 }
 
 void Clipboard::InitTrayMenu() {
