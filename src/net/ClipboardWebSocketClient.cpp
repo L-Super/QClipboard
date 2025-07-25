@@ -8,7 +8,7 @@ ClipboardWebSocketClient::ClipboardWebSocketClient(const QUrl &url, QObject *par
     // 连接底层信号
     connect(&webSocket, &QWebSocket::connected,
             this, &ClipboardWebSocketClient::onConnected);
-    connect(&webSocket, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
+    connect(&webSocket, &QWebSocket::errorOccurred,
             this, &ClipboardWebSocketClient::onError);
     connect(&webSocket, &QWebSocket::disconnected,
             this, &ClipboardWebSocketClient::onDisconnected);
@@ -53,12 +53,12 @@ void ClipboardWebSocketClient::onConnected() {
 }
 
 void ClipboardWebSocketClient::onTextMessageReceived(const QString &message) {
-    qDebug() << "Text message:" << message;
+    qDebug() <<__func__ << "Websocket text message:" << message;
     emit notifyMessageReceived(message);
 }
 
 void ClipboardWebSocketClient::onBinaryMessageReceived(const QByteArray &message) {
-    qDebug() << "Binary message received; length =" << message.size();
+    qDebug() << __func__ <<"Websocket binary message received; length =" << message.size();
     // 如果服务端以二进制发推送，可以转换成 QString 或 QJsonDocument
     emit notifyMessageReceived(QString::fromUtf8(message));
 }

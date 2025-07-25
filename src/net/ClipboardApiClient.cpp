@@ -50,13 +50,19 @@ void ClipboardApiClient::uploadClipboard(const ClipboardData &data,
   QNetworkRequest req(url);
   req.setRawHeader("Authorization",
                    QString("Bearer %1").arg(authToken).toUtf8());
+  req.setHeader(QNetworkRequest::KnownHeaders::ContentTypeHeader,"application/json");
 
   QJsonObject body;
   body["data"] = data.data;
   auto type = magic_enum::enum_name(data.type);
   body["type"] = QString::fromStdString(type.data());
-  body["meta"] = data.meta;
+  if(!data.meta.isEmpty())
+    // meta value must be a json
+    body["meta"] = data.meta;
 
+  auto json = QJsonDocument(body).toJson();
+  auto header = req.headers().toListOfPairs();
+  auto raw = req.rawHeaderList();
   QNetworkReply *reply = manager->post(req, QJsonDocument(body).toJson());
   replyMap.insert(reply, Endpoint::Upload);
 }
@@ -66,6 +72,7 @@ void ClipboardApiClient::onNetworkReply(QNetworkReply *reply) {
 
   if (reply->error() != QNetworkReply::NoError) {
     QString err = reply->errorString();
+    qDebug()<<"onNetworkReply. Error:"<<err;
     switch (ep) {
     case Endpoint::Register:
       emit registrationFinished(false, err);
