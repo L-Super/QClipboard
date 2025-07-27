@@ -23,7 +23,7 @@ jobs:
             fail-fast: false
             matrix:
                 os: [windows-latest, ubuntu-latest]
-                qt_version: [5.15.2, 6.8.0]
+                qt_version: [6.8.0]
                 build_type: [Release]
 
         steps:
