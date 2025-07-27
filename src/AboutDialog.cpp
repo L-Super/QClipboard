@@ -15,7 +15,7 @@ AboutDialog::AboutDialog(QWidget *parent)
   const QString md{
       QString("### 简介\n"
               "一个跨平台的剪贴板工具，可以从剪贴板历史记录中选择对应的项进行粘"
-              "贴。\n"
+              "贴，支持不同设备之间数据实时同步。\n"
               "### 使用方式\n"
               "快捷键 `Alt + V`显示剪贴板\n"
               "### 版本\n"

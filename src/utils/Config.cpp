@@ -7,25 +7,47 @@
 
 namespace fs = std::filesystem;
 
-Config::~Config() {
-    save();
+Config::~Config() { save(); }
+
+bool Config::load(const fs::path &file) {
+  filepath_ = file;
+  std::ifstream in(file);
+  if (!in.is_open())
+    return false;
+
+  // Check if file is empty
+  in.seekg(0, std::ios::end);
+  if (in.tellg() == 0) {
+    // File is empty, do not parse
+    return false;
+  }
+  in.seekg(0, std::ios::beg);
+
+  try {
+    data_ = nlohmann::json::parse(in);
+  } catch (const std::exception &e) {
+
+    return false;
+  }
+
+  return true;
 }
 
-bool Config::load(const fs::path& file) {
-    filepath_ = file;
-    std::ifstream in(file);
-    if (!in) return false;
-    data_ = nlohmann::json::parse(in, nullptr, false);
-    return !data_.is_discarded();
-}
-
-Config::Config(const fs::path& file) {
-    load(file);
+Config::Config(const fs::path &file) {
+  if (!fs::exists(file)) {
+    auto parentPath = file.parent_path();
+    fs::create_directories(parentPath);
+    // create an empty file
+    std::ofstream out(file);
+  }
+  load(file);
 }
 
 bool Config::save() const {
-    std::ofstream out(filepath_);
-    if (!out) return false;
+  std::ofstream out(filepath_);
+  if (!out)
+    return false;
+  if (!data_.empty())
     out << data_.dump(4);
-    return true;
+  return true;
 }

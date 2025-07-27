@@ -12,6 +12,7 @@ set(SRC_FILES
         Clipboard.cpp Clipboard.h
         Item.cpp Item.h Item.ui
         AboutDialog.cpp AboutDialog.h AboutDialog.ui
+        MainWindow.cpp MainWindow.h MainWindow.ui
 )
 set(RES_FILES Clipboard.qrc)
 
@@ -48,6 +49,9 @@ FetchContent_Declare(SingleApplication
 )
 FetchContent_Declare(magic_enum
         GIT_REPOSITORY https://github.com/Neargye/magic_enum
+        GIT_TAG v0.9.7
+        GIT_SHALLOW ON
+        GIT_PROGRESS ON
 )
 FetchContent_Declare(json
         URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
