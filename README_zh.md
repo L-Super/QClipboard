@@ -18,6 +18,9 @@
 + 可以删除历史记录中的项目
 
 ## 编译
+
+最低依赖要求 Qt6
+
 ```bash
 git clone https://github.com/L-Super/QClipboard --recursive
 cd QClipboard

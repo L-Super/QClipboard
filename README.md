@@ -18,6 +18,8 @@ The global shortcut `Alt + V` can be used to display the clipboard.
 
 ## Building
 
+Minimum dependency requirement Qt6
+
 ```bash
 git clone https://github.com/L-Super/QClipboard --recursive
 cd QClipboard
