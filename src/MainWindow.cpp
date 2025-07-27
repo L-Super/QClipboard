@@ -10,6 +10,8 @@
 #include <QButtonGroup>
 #include <QTimer>
 
+#include "utils/AutoStartup.h"
+
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow), buttonGroup(new QButtonGroup(this)) {
   ui->setupUi(this);
   buttonGroup->setExclusive(true);
@@ -33,6 +35,9 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow
                            "[L-Super/QClipboard](https://github.com/L-Super/QClipboard)")
                        .arg(version)};
   ui->textBrowser->setMarkdown(md);
+
+  AutoStartup autoStartup;
+  ui->autoStartupCheckBox->setChecked(autoStartup.IsAutoStartup());
 
   connect(ui->generalButton, &QToolButton::toggled, this, [this, button = ui->generalButton](bool checked) {
     if (checked) {
@@ -58,6 +63,10 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow
 
   connect(buttonGroup, &QButtonGroup::idClicked, this, [this](auto id) { ui->stackedWidget->setCurrentIndex(id); });
 
+  connect(ui->autoStartupCheckBox, &QCheckBox::toggled, this, [this](bool checked) {
+    AutoStartup autoStartup;
+    autoStartup.SetAutoStartup(checked);
+  });
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::editingFinished, this,
   //         [this, hotkey]() { qDebug() << "editing finished"; });
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::keySequenceChanged, this,
@@ -72,7 +81,8 @@ void MainWindow::SetHotkey(QHotkey *hotkey) {
   ui->keySequenceEdit->setKeySequence(this->hotkey->shortcut());
 
   connect(ui->keySequenceConfirmButton, &QPushButton::clicked, this, [this]() {
-    if (!this->hotkey) return;
+    if (!this->hotkey)
+      return;
 
     auto keySequence = ui->keySequenceEdit->keySequence();
     this->hotkey->setShortcut(keySequence, true);

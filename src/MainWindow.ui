@@ -198,7 +198,7 @@
              </widget>
             </item>
             <item>
-             <widget class="QCheckBox" name="checkBox">
+             <widget class="QCheckBox" name="autoStartupCheckBox">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
