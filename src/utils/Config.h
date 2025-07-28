@@ -19,6 +19,7 @@ public:
   bool save() const;
 
   template <typename T> void set(const std::string &key, T &&value) {
+    // set data to json first
     data_[key] = std::forward<T>(value);
   }
 

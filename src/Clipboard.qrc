@@ -4,6 +4,14 @@
         <file>resources/images/setting.svg</file>
         <file>resources/images/info.svg</file>
         <file>resources/images/delete.svg</file>
+        <file>resources/images/action-home.svg</file>
+        <file>resources/images/home.svg</file>
+        <file>resources/images/sync.svg</file>
+        <file>resources/images/keyboard.svg</file>
+        <file>resources/images/home-white.svg</file>
+        <file>resources/images/home.png</file>
+        <file>resources/images/sync-white.svg</file>
+        <file>resources/images/keyboard-white.svg</file>
         <file>resources/images/clipboard2.svg</file>
     </qresource>
     <qresource prefix="/qss">

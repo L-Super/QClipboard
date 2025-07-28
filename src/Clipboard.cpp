@@ -5,8 +5,10 @@
 #include "Clipboard.h"
 #include "AboutDialog.h"
 #include "Item.h"
+#include "MainWindow.h"
 #include "QHotkey"
 #include "net/SyncServer.h"
+#include "utils/Config.h"
 
 #include <QAction>
 #include <QApplication>
@@ -21,9 +23,11 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMimeData>
 #include <QPushButton>
 #include <QSizePolicy>
+#include <QStandardPaths>
 #include <QSystemTrayIcon>
 #include <QVBoxLayout>
 
@@ -33,13 +37,12 @@
 //  3. 点击item时，自动在光标处粘贴
 
 Clipboard::Clipboard(QWidget *parent)
-    : QWidget(parent), clipboard(QApplication::clipboard()),
-      trayIcon(new QSystemTrayIcon(this)), trayMenu(new QMenu()),
-      hotkey(new QHotkey(this)), listWidget(new QListWidget(this)) {
+    : QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)), trayMenu(new QMenu()),
+      hotkey(new QHotkey(this)), listWidget(new QListWidget(this)), homeWidget(new MainWindow()) {
   setWindowOpacity(0.9);
 
-  setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint |
-                 Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint);
+  setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint |
+                 Qt::WindowStaysOnTopHint);
   resize(360, 400);
 
   auto label = new QLabel("剪贴板", this);
@@ -58,7 +61,10 @@ Clipboard::Clipboard(QWidget *parent)
   // 屏蔽水平滚动条
   listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+  configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/clipboard_settings.json";
+
   SetShortcut();
+  homeWidget->SetHotkey(hotkey);
   CreateTrayAction();
   InitTrayMenu();
 
@@ -76,24 +82,22 @@ Clipboard::Clipboard(QWidget *parent)
   qApp->installEventFilter(this);
 
   connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
-  connect(listWidget, &QListWidget::itemClicked, this,
-          [this](QListWidgetItem *listWidgetItem) {
-            Item *item =
-                qobject_cast<Item *>(listWidget->itemWidget(listWidgetItem));
+  connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *listWidgetItem) {
+    Item *item = qobject_cast<Item *>(listWidget->itemWidget(listWidgetItem));
 
-            switch (item->GetMetaType()) {
-            case QMetaType::QString: {
-              clipboard->setText(item->GetText());
-              this->hide();
-            } break;
-            case QMetaType::QImage: {
-              clipboard->setImage(item->GetImage());
-              this->hide();
-            } break;
-            default:
-              break;
-            }
-          });
+    switch (item->GetMetaType()) {
+    case QMetaType::QString: {
+      clipboard->setText(item->GetText());
+      this->hide();
+    } break;
+    case QMetaType::QImage: {
+      clipboard->setImage(item->GetImage());
+      this->hide();
+    } break;
+    default:
+      break;
+    }
+  });
 
   connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
 
@@ -136,9 +140,14 @@ Clipboard::Clipboard(QWidget *parent)
   connect(sync.get(), &SyncServer::syncConnected, [] {});
   connect(sync.get(), &SyncServer::syncDisconnected, [] {});
   connect(sync.get(), &SyncServer::syncError, [] {});
+  connect(homeWidget, &MainWindow::shortcutChangedSignal, this, [this](const QKeySequence &keySequence) {
+    Config config(configFilePath.toStdString());
+    auto value = keySequence.toString().toStdString();
+    config.set("shortcut", value);
+  });
 }
 
-Clipboard::~Clipboard() {}
+Clipboard::~Clipboard() { homeWidget->deleteLater(); }
 
 void Clipboard::DataChanged() {
   if (clipboard->text().isEmpty()) {
@@ -221,20 +230,27 @@ void Clipboard::InitTrayMenu() {
   // 在系统拖盘增加图标时显示提示信息
   trayIcon->showMessage("QClipboard 剪贴板", "已隐藏至系统托盘");
 
-  connect(trayIcon, &QSystemTrayIcon::activated, this,
-          &Clipboard::TrayIconActivated);
+  connect(trayIcon, &QSystemTrayIcon::activated, this, &Clipboard::TrayIconActivated);
 }
 
 void Clipboard::CreateTrayAction() {
+  auto homeAction = new QAction("主界面");
   auto aboutAction = new QAction("关于");
   auto exitAction = new QAction("退出");
 
+  homeAction->setIcon(QIcon(":/resources/images/action-home.svg"));
   aboutAction->setIcon(QIcon(":/resources/images/info.svg"));
   exitAction->setIcon(QIcon(":/resources/images/power.svg"));
 
+  trayMenu->addAction(homeAction);
   trayMenu->addAction(aboutAction);
   trayMenu->addSeparator();
   trayMenu->addAction(exitAction);
+
+  connect(homeAction, &QAction::triggered, this, [this] {
+    homeWidget->show();
+    homeWidget->raise();
+  });
 
   connect(exitAction, &QAction::triggered, qApp, &QApplication::quit);
 
@@ -245,11 +261,22 @@ void Clipboard::CreateTrayAction() {
 }
 
 void Clipboard::SetShortcut() {
-  auto isSuccess = hotkey->setShortcut(QKeySequence("Alt+V"), true);
-  // TODO: add tips and change shortcut
-  if (!isSuccess) {
-    qCritical() << "set shortcut failed";
+  Config config(configFilePath.toStdString());
+  // 从配置文件读取快捷键
+  QString shortcutStr = "Alt+V"; // 默认快捷键
+  // 将快捷键在配置文件中存为一个字符串，例如 "Alt+V" 或 "Ctrl+Shift+V"
+  if (auto op = config.get<std::string>("shortcut"); op.has_value() && !op->empty()) {
+    shortcutStr = QString::fromStdString(*op);
   }
+
+  // 设置快捷键
+  hotkey->setShortcut(QKeySequence(shortcutStr), true);
+  if (!hotkey->isRegistered()) {
+    QMessageBox::warning(this, "快捷键设置失败",
+                         QString("无法设置快捷键: %1\n请检查是否与其他程序冲突。").arg(shortcutStr));
+    return;
+  }
+  qDebug() << "Registered global shortcut is" << shortcutStr << hotkey->shortcut();
   connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
 

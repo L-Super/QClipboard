@@ -14,6 +14,7 @@ class QHotkey;
 class QClipboard;
 class QListWidget;
 class QListWidgetItem;
+class MainWindow;
 class SyncServer;
 
 class Clipboard : public QWidget {
@@ -53,5 +54,7 @@ class Clipboard : public QWidget {
     QListWidget *listWidget;
     QSet<QByteArray> hashItems;
     QHash<QByteArray, QListWidgetItem *> hashItemMap;
+    MainWindow* homeWidget;
+    QString configFilePath;
     std::unique_ptr<SyncServer> sync;
 };
