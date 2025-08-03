@@ -347,6 +347,20 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QLabel" name="accountStatusLabel">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="loginButton">
+              <property name="text">
+               <string>登录</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
           <item>
@@ -376,6 +390,13 @@
             </item>
             <item>
              <widget class="QLineEdit" name="deviceNameLineEdit"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="deviceNameConfirmButton">
+              <property name="text">
+               <string>确定</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>

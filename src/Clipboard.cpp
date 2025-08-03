@@ -9,6 +9,7 @@
 #include "QHotkey"
 #include "net/SyncServer.h"
 #include "utils/Config.h"
+#include "utils/Util.h"
 
 #include <QAction>
 #include <QApplication>
@@ -61,23 +62,10 @@ Clipboard::Clipboard(QWidget *parent)
   // 屏蔽水平滚动条
   listWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-  configFilePath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/clipboard_settings.json";
-
   SetShortcut();
   homeWidget->SetHotkey(hotkey);
   CreateTrayAction();
   InitTrayMenu();
-
-  // TODO:
-  QUrl apiUrl("http://127.0.0.1:8000");
-  QUrl wsUrl("ws://127.0.0.1:8000/sync/notify");
-
-  sync = std::make_unique<SyncServer>(apiUrl, wsUrl);
-  sync->login({.email = "user@example.com",
-               .password = "string",
-               .deviceId = "clipboard-id",
-               .deviceName = "QClip",
-               .deviceType = DeviceType::windows});
 
   qApp->installEventFilter(this);
 
@@ -101,59 +89,86 @@ Clipboard::Clipboard(QWidget *parent)
 
   connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
 
-  connect(sync.get(), &SyncServer::registrationFinished, [] {});
-  connect(sync.get(), &SyncServer::loginFinished, [] {});
-  connect(sync.get(), &SyncServer::uploadFinished, [] {});
-  connect(sync.get(), &SyncServer::notifyMessageReceived,
-          [this](const QString &message) {
-            //{
-            //  "action":"update",
-            //  "type":"", // text, image, file
-            //  "data":"",
-            //  "data_hash":"",
-            //  "meta":{}
-            //}
+  auto serverInfo = Config::instance().getServerConfig();
+  if (serverInfo.has_value()) {
+    auto url = QString::fromStdString(serverInfo->url);
 
-            qDebug() << "websocket received:" << message;
-            try {
-              const auto doc = QJsonDocument::fromJson(message.toUtf8());
-              const auto obj = doc.object();
-              auto type = obj.value("type").toString();
-              auto compressedData = obj.value("data").toString();
-              auto data = qUncompress(compressedData.toUtf8());
+    DeviceType deviceType;
+#if defined(Q_OS_WIN)
+    deviceType = DeviceType::windows;
+#elif defined(Q_OS_LINUX)
+    deviceType = DeviceType::linux;
+#elif defined(Q_OS_MAC)
+    deviceType = DeviceType::mac;
+#endif
 
-              if (type == "text") {
-                clipboard->setText(data);
+    sync = std::make_unique<SyncServer>(url);
+    sync->setUrl(url);
+    sync->login({.email = QString::fromStdString(serverInfo->user),
+                 .password = QString::fromStdString(serverInfo->password),
+                 .deviceId = utils::generateDeviceId(),
+                 .deviceName = QString::fromStdString(serverInfo->device_name),
+                 .deviceType = deviceType});
+    connect(sync.get(), &SyncServer::registrationFinished, [] {});
+    connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token &token, const QString &message) {
+      if (success)
+        qDebug() << "login successful";
+      else
+        qDebug() << "login failed." << message;
+    });
+    connect(sync.get(), &SyncServer::uploadFinished, [] {});
+    connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString &message) {
+      // json:
+      //{
+      //  "action":"update",
+      //  "type":"", // text, image, file
+      //  "data":"",
+      //  "data_hash":"",
+      //  "meta":{}
+      //}
 
-              } else if (type == "image") {
-                // TODO: support image and files in the future
-                //        QImage image = QImage::fromData(data.toUtf8());
-                //        clipboard->setImage(image);
-                //        qDebug()<<"image format"<<image.format();
-              } else if (type == "file") {
-              }
+      qDebug() << "websocket received:" << message;
+      try {
+        const auto doc = QJsonDocument::fromJson(message.toUtf8());
+        const auto obj = doc.object();
+        auto type = obj.value("type").toString();
+        auto data = obj.value("data").toString();
 
-            } catch (const std::exception &e) {
-              qDebug() << "" << e.what();
-            }
-          });
-  connect(sync.get(), &SyncServer::syncConnected, [] {});
-  connect(sync.get(), &SyncServer::syncDisconnected, [] {});
-  connect(sync.get(), &SyncServer::syncError, [] {});
-  connect(homeWidget, &MainWindow::shortcutChangedSignal, this, [this](const QKeySequence &keySequence) {
-    Config config(configFilePath.toStdString());
-    auto value = keySequence.toString().toStdString();
-    config.set("shortcut", value);
-  });
+        if (type == "text") {
+          auto uncompressData = qUncompress(data.toUtf8());
+          if (uncompressData.isNull() || uncompressData.isEmpty()) {
+            qDebug() << "Maybe not use qCompress(), add raw data";
+            clipboard->setText(data);
+          } else {
+            clipboard->setText(uncompressData);
+          }
+
+        } else if (type == "image") {
+          // TODO: support image and files in the future
+          //        QImage image = QImage::fromData(data.toUtf8());
+          //        clipboard->setImage(image);
+          //        qDebug()<<"image format"<<image.format();
+          auto meta = obj.value("meta").toObject();
+          auto filename = meta.value("filename").toString();
+          auto contentType = meta.value("content_type").toString();
+          auto size = meta.value("size").toInt();
+          qDebug() << "received image: "<<filename << size << contentType;
+        } else if (type == "file") {
+        }
+
+      } catch (const std::exception &e) {
+        qDebug() << "websocket received exception." << e.what();
+      }
+    });
+    connect(sync.get(), &SyncServer::syncConnected, [] {});
+    connect(sync.get(), &SyncServer::syncDisconnected, [] {});
+    connect(sync.get(), &SyncServer::syncError, [] {});
+  }
 }
 
 Clipboard::~Clipboard() { homeWidget->deleteLater(); }
 
 void Clipboard::DataChanged() {
-  if (clipboard->text().isEmpty()) {
-    return;
-  }
-
   QVariant data;
   QByteArray hashValue;
   ClipboardData clipData;
@@ -164,10 +179,11 @@ void Clipboard::DataChanged() {
   if (mimeData->hasText()) {
     latestText = mimeData->text();
     data.setValue(latestText);
-    hashValue =
-        QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
+    hashValue = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
+
     clipData.type = ClipboardDataType::text;
-    clipData.data = QString::fromUtf8(qCompress(latestText.toUtf8()));
+    // use qCompress()
+    clipData.data = qCompress(latestText.toUtf8());
   } else if (mimeData->hasImage()) {
     // 将图片数据转为QImage
     auto image = qvariant_cast<QImage>(mimeData->imageData());
@@ -178,12 +194,15 @@ void Clipboard::DataChanged() {
     hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
 
     data.setValue(image);
-    // TODO: support image and files in the future
-    //    clipData.type = ClipboardDataType::image;
-    //    clipData.data = ba;
+
+    clipData.type = ClipboardDataType::image;
+    clipData.data = ba;
   } else if (mimeData->hasUrls()) {
     qDebug() << "has urls" << mimeData->urls();
   }
+
+  if (data.isNull() || hashValue.isEmpty())
+    return;
 
   // 如果已存在，则把对应 item 搬到最前面
   if (hashItemMap.contains(hashValue)) {
@@ -192,8 +211,8 @@ void Clipboard::DataChanged() {
   }
 
   AddItem(data, hashValue);
-
-  sync->uploadClipboardData(clipData);
+  if (sync)
+    sync->uploadClipboardData(clipData);
 }
 
 void Clipboard::ClearItems() {
@@ -248,6 +267,7 @@ void Clipboard::CreateTrayAction() {
   trayMenu->addAction(exitAction);
 
   connect(homeAction, &QAction::triggered, this, [this] {
+    homeWidget->SetOnlineStatus(sync->isLoggedIn());
     homeWidget->show();
     homeWidget->raise();
   });
@@ -261,7 +281,7 @@ void Clipboard::CreateTrayAction() {
 }
 
 void Clipboard::SetShortcut() {
-  Config config(configFilePath.toStdString());
+  Config &config = Config::instance();
   // 从配置文件读取快捷键
   QString shortcutStr = "Alt+V"; // 默认快捷键
   // 将快捷键在配置文件中存为一个字符串，例如 "Alt+V" 或 "Ctrl+Shift+V"

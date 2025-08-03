@@ -13,9 +13,12 @@ class SyncServer : public QObject {
   Q_OBJECT
 
 public:
-  explicit SyncServer(const QUrl &apiBaseUrl, const QUrl &wsBaseUrl,
-                      QObject *parent = nullptr);
+  explicit SyncServer(const QUrl &apiBaseUrl, QObject *parent = nullptr);
   ~SyncServer() override;
+
+  void setUrl(const QUrl &apiBaseUrl);
+
+  bool isLoggedIn() const;
 
 public slots:
   // HTTP 接口
@@ -51,4 +54,5 @@ private:
   ClipboardApiClient *apiClient{};
   ClipboardWebSocketClient *wsClient{nullptr};
   QString authToken;
+  bool isLoginSuccessful{};
 };

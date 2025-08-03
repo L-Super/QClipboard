@@ -14,6 +14,8 @@ public:
   explicit ClipboardApiClient(const QUrl &baseUrl, QObject *parent = nullptr);
   ~ClipboardApiClient() override;
 
+  void setUrl(const QUrl &url);
+
   // 注册新用户
   void registerUser(const QString &email, const QString &password);
 

@@ -7,13 +7,18 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <optional>
+#include "../net/ClipboardStruct.h"
 
 class Config {
-
-public:
+private:
   Config() = default;
   ~Config();
-  explicit Config(const std::filesystem::path &file);
+
+public:
+  static Config &instance() {
+    static Config config;
+    return config;
+  }
 
   bool load(const std::filesystem::path &file);
   bool save() const;
@@ -28,6 +33,9 @@ public:
       return {};
     return data_.at(key).get<T>();
   }
+
+  void setServerConfig(const ServerConfig& server);
+  std::optional<ServerConfig> getServerConfig() const;
 
 private:
   nlohmann::json data_;

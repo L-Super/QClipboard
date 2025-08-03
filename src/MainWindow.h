@@ -22,11 +22,10 @@ public:
   ~MainWindow() override;
 
   void SetHotkey(QHotkey *hotkey);
-
-signals:
-  void shortcutChangedSignal(const QKeySequence& key);
+  void SetOnlineStatus(bool online);
 
 protected:
+  void showEvent(QShowEvent *event) override;
   void closeEvent(QCloseEvent *event) override;
 
 private:

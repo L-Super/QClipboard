@@ -3,17 +3,21 @@
 //
 
 #include "MainWindow.h"
-
-#include "QHotkey"
 #include "ui_MainWindow.h"
 
 #include <QButtonGroup>
 #include <QTimer>
 
+#include "QHotkey"
+
+#include "net/SyncServer.h"
 #include "utils/AutoStartup.h"
+#include "utils/Config.h"
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow), buttonGroup(new QButtonGroup(this)) {
   ui->setupUi(this);
+  ui->stackedWidget->setCurrentIndex(0);
+
   buttonGroup->setExclusive(true);
   buttonGroup->addButton(ui->generalButton, 0);
   buttonGroup->addButton(ui->shortcutButton, 1);
@@ -67,6 +71,17 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow
     AutoStartup autoStartup;
     autoStartup.SetAutoStartup(checked);
   });
+  connect(ui->deviceNameConfirmButton, &QPushButton::clicked, this, [this]() {
+    auto deviceName = ui->deviceNameLineEdit->text();
+    ui->deviceNameLineEdit->setPlaceholderText(deviceName);
+    if (!deviceName.isEmpty()) {
+      auto info = Config::instance().getServerConfig();
+      if (info.has_value()) {
+        info->device_name = deviceName.toStdString();
+        Config::instance().setServerConfig(*info);
+      }
+    }
+  });
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::editingFinished, this,
   //         [this, hotkey]() { qDebug() << "editing finished"; });
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::keySequenceChanged, this,
@@ -89,7 +104,11 @@ void MainWindow::SetHotkey(QHotkey *hotkey) {
 
     if (this->hotkey->isRegistered()) {
       ui->warningLabel->setText("快捷键设置成功！");
-      emit shortcutChangedSignal(keySequence);
+
+      // update config
+      auto value = keySequence.toString().toStdString();
+      Config::instance().set("shortcut", value);
+      Config::instance().save();
     } else {
       ui->warningLabel->setText("<span style='color:red;'>快捷键设置冲突或不符合规则，请重新设置！</span>");
     }
@@ -97,6 +116,26 @@ void MainWindow::SetHotkey(QHotkey *hotkey) {
     ui->warningLabel->show();
     QTimer::singleShot(1000, [this]() { ui->warningLabel->clear(); });
   });
+}
+
+void MainWindow::SetOnlineStatus(bool online) {
+  auto serverConfig = Config::instance().getServerConfig();
+  if (online && serverConfig.has_value()) {
+    QString user = QString::fromStdString(serverConfig.value().user);
+
+    ui->accountLabel->setText(user);
+    ui->accountStatusLabel->setText("<span style='color:green;'>在线</span>");
+    ui->deviceNameLineEdit->setPlaceholderText(QString::fromStdString(serverConfig.value().device_name));
+    ui->loginButton->hide();
+  } else {
+    ui->accountLabel->clear();
+    ui->accountStatusLabel->setText("<span style='color:red;'>离线</span>");
+    ui->loginButton->show();
+  }
+}
+
+void MainWindow::showEvent(QShowEvent *event) {
+  QWidget::showEvent(event);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

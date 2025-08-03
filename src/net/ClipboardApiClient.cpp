@@ -1,21 +1,22 @@
 #include "ClipboardApiClient.h"
 #include "magic_enum/magic_enum.hpp"
+
+#include <QBuffer>
 #include <QHttpMultiPart>
 #include <QHttpPart>
 #include <QJsonDocument>
 #include <QJsonObject>
 
 ClipboardApiClient::ClipboardApiClient(const QUrl &baseUrl, QObject *parent)
-    : QObject(parent), manager(new QNetworkAccessManager(this)),
-      baseUrl(baseUrl) {
-  connect(manager, &QNetworkAccessManager::finished, this,
-          &ClipboardApiClient::onNetworkReply);
+    : QObject(parent), manager(new QNetworkAccessManager(this)), baseUrl(baseUrl) {
+  connect(manager, &QNetworkAccessManager::finished, this, &ClipboardApiClient::onNetworkReply);
 }
 
 ClipboardApiClient::~ClipboardApiClient() = default;
 
-void ClipboardApiClient::registerUser(const QString &email,
-                                      const QString &password) {
+void ClipboardApiClient::setUrl(const QUrl &url) { baseUrl = url; }
+
+void ClipboardApiClient::registerUser(const QString &email, const QString &password) {
   QUrl url = baseUrl.resolved(QUrl("/auth/register"));
   QNetworkRequest req(url);
   req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -44,26 +45,46 @@ void ClipboardApiClient::login(const User &user) {
   replyMap.insert(reply, Endpoint::Login);
 }
 
-void ClipboardApiClient::uploadClipboard(const ClipboardData &data,
-                                         const QString &authToken) {
+void ClipboardApiClient::uploadClipboard(const ClipboardData &data, const QString &authToken) {
   QUrl url = baseUrl.resolved(QUrl("/clipboard"));
   QNetworkRequest req(url);
-  req.setRawHeader("Authorization",
-                   QString("Bearer %1").arg(authToken).toUtf8());
-  req.setHeader(QNetworkRequest::KnownHeaders::ContentTypeHeader,"application/json");
+  req.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
 
-  QJsonObject body;
-  body["data"] = data.data;
-  auto type = magic_enum::enum_name(data.type);
-  body["type"] = QString::fromStdString(type.data());
-  if(!data.meta.isEmpty())
-    // meta value must be a json
-    body["meta"] = data.meta;
+  QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
-  auto json = QJsonDocument(body).toJson();
-  auto header = req.headers().toListOfPairs();
-  auto raw = req.rawHeaderList();
-  QNetworkReply *reply = manager->post(req, QJsonDocument(body).toJson());
+  QHttpPart typePart;
+  typePart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"type\"");
+  if (data.type == ClipboardDataType::text) {
+    typePart.setBody("text");
+
+    QHttpPart dataPart;
+    dataPart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"data\"");
+    dataPart.setBody(data.data);
+
+    multiPart->append(typePart);
+    multiPart->append(dataPart);
+  } else {
+    auto type = QString::fromStdString(std::string(magic_enum::enum_name(data.type)));
+
+    typePart.setBody(type.toUtf8()); // image 或 "file"
+
+    QHttpPart filePart;
+    // TODO: add file meta
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"file\"; filename=\"test.png\"");
+    filePart.setHeader(QNetworkRequest::ContentTypeHeader, "image/png"); // 或其他类型
+
+    QBuffer* buffer = new QBuffer();
+    buffer->setData(data.data);
+    buffer->open(QIODevice::ReadOnly);
+    filePart.setBodyDevice(buffer);
+    buffer->setParent(multiPart);
+
+    multiPart->append(typePart);
+    multiPart->append(filePart);
+  }
+
+  QNetworkReply *reply = manager->post(req, multiPart);
+  multiPart->setParent(reply); // 自动释放
   replyMap.insert(reply, Endpoint::Upload);
 }
 
@@ -72,7 +93,7 @@ void ClipboardApiClient::onNetworkReply(QNetworkReply *reply) {
 
   if (reply->error() != QNetworkReply::NoError) {
     QString err = reply->errorString();
-    qDebug()<<"onNetworkReply. Error:"<<err;
+    qDebug() << "onNetworkReply. Error:" << err;
     switch (ep) {
     case Endpoint::Register:
       emit registrationFinished(false, err);
@@ -106,16 +127,14 @@ void ClipboardApiClient::handleJsonResponse(QNetworkReply *reply, Endpoint ep) {
   } break;
   case Endpoint::Login: {
     QString accessToken = obj.value("access_token").toString();
-    QString refreshToken = obj.value("access_token").toString();
-    emit loginFinished(
-        true, {.accessToken = accessToken, .refreshToken = refreshToken}, "");
+    QString refreshToken = obj.value("refresh_token").toString();
+    emit loginFinished(true, {.accessToken = accessToken, .refreshToken = refreshToken}, "");
   } break;
   case Endpoint::Upload: {
     QString id = obj.value("id").toString();
     QString created = obj.value("created_at").toString();
-    QString source = obj.value("source_device").toString();
+
     emit uploadFinished(true, bytes);
-  }
-    break;
+  } break;
   }
 }
