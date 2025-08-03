@@ -96,10 +96,6 @@ Clipboard::Clipboard(QWidget *parent)
 Clipboard::~Clipboard() { homeWidget->deleteLater(); }
 
 void Clipboard::DataChanged() {
-  if (clipboard->text().isEmpty()) {
-    return;
-  }
-
   QVariant data;
   QByteArray hashValue;
   const QMimeData *mimeData = clipboard->mimeData();
@@ -120,7 +116,10 @@ void Clipboard::DataChanged() {
   } else if (mimeData->hasUrls()) {
     qDebug() << "has urls" << mimeData->urls();
   }
-
+    
+  if (data.isNull() || hashValue.isEmpty())
+    return;
+    
   // 如果已存在，则把对应 item 搬到最前面
   if (hashItemMap.contains(hashValue)) {
     MoveItemToTop(hashValue);
