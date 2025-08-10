@@ -36,6 +36,7 @@ jobs:
                   version: ${{matrix.qt_version}}
                   cache: true
                   cache-key-prefix: 'Qt'
+                  modules: 'qtwebsockets'
 
             - name: Configure CMake
               # Configure CMake in a 'build' subdirectory.
