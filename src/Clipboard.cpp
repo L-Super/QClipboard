@@ -155,7 +155,7 @@ void Clipboard::StayOnTop() {
 
 void Clipboard::InitTrayMenu() {
   // TODO:update icon
-  trayIcon->setIcon(QIcon(":/resources/images/clipboard2.svg"));
+  trayIcon->setIcon(QIcon(":/resources/icon.png"));
   // 在右键时，弹出菜单。
   trayIcon->setContextMenu(trayMenu);
   trayIcon->setToolTip("QClipboard");

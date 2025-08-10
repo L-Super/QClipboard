@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
-project(QClipboard)
+project(QClipboard
+        VERSION 1.0.2.0 # Set application version. For more details, see src/version.h.in
+)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,12 +13,5 @@ set(CMAKE_AUTOUIC ON)
 if (WIN32 AND MSVC)
     add_compile_options(/utf-8)
 endif ()
-
-set(VERSION_MAJOR 1)
-set(VERSION_MINOR 0)
-set(VERSION_PATCH 4)
-
-set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
-set(VERSION_WIN "${VERSION_MAJOR},${VERSION_MINOR},${VERSION_PATCH}")
 
 add_subdirectory(src)
