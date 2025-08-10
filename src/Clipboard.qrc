@@ -12,7 +12,8 @@
         <file>resources/images/home.png</file>
         <file>resources/images/sync-white.svg</file>
         <file>resources/images/keyboard-white.svg</file>
-        <file>resources/images/clipboard2.svg</file>
+        <file>resources/icon.svg</file>
+        <file>resources/icon.png</file>
     </qresource>
     <qresource prefix="/qss">
         <file>resources/style.css</file>

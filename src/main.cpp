@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[]) {
   SingleApplication a(argc, argv);
-  a.setWindowIcon(QIcon(":/resources/images/clipboard2.svg"));
+  a.setWindowIcon(QIcon(":/resources/icon.png"));
   a.setApplicationVersion(VERSION_STR);
 
   QFile style(":/qss/resources/style.css");

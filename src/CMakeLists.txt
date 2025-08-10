@@ -21,6 +21,32 @@ set(SRC_FILES
 )
 set(RES_FILES Clipboard.qrc)
 
+set(APP_DESCRIPTION "QClipboard")
+set(APP_COPYRIGHT "Copyright 2025-2077 The QClipboard.")
+
+if (WIN32)
+    # set Windows rc info
+    set(PRODUCT_ICON "icon.ico")
+    set(FILE_VERSION ${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},${PROJECT_VERSION_TWEAK}) # 文件版本
+    set(FILE_VERSION_STR "${PROJECT_VERSION}")
+    set(PRODUCT_VERSION ${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},${PROJECT_VERSION_TWEAK}) # 产品版本
+    set(PRODUCT_VERSION_STR "${PROJECT_VERSION}")
+    set(COMPANY_NAME "QClipboard")
+    set(FILE_DESCRIPTION ${APP_DESCRIPTION}) # 文件说明
+    set(LEGAL_COPYRIGHT ${APP_COPYRIGHT})
+    set(PRODUCT_NAME "QClipboard")
+
+    set(WIN_RES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/resources/win)
+    configure_file(${WIN_RES_PATH}/app.rc.in ${WIN_RES_PATH}/app.rc @ONLY)
+
+    set(RES_FILES ${RES_FILES} ${WIN_RES_PATH}/app.rc)
+
+elseif (APPLE)
+    set(MAC_RES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/mac")
+    # It needs to be added to add_executable to display the bundle icon on macOS
+    set(RES_FILES ${RES_FILES} ${MAC_RES_PATH}/icon.icns)
+endif ()
+
 add_executable(${PROJECT_NAME}
         ${SRC_FILES}
         ${RES_FILES}
@@ -34,6 +60,19 @@ if (WIN32)
     endif ()
 elseif (APPLE)
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
+
+    # Add icon to Mac bundle Resources dir
+    set_source_files_properties(${MAC_RES_PATH}/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+            MACOSX_BUNDLE_BUNDLE_NAME "${PROJECT_NAME}"
+            MACOSX_BUNDLE_ICON_FILE "icon.icns"
+            MACOSX_BUNDLE_GUI_IDENTIFIER "com.QClipboard.QClipboard"
+            MACOSX_BUNDLE_INFO_STRING ${APP_DESCRIPTION}
+            MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
+            MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT}
+            MACOSX_BUNDLE_INFO_PLIST ${MAC_RES_PATH}/Info.plist.in)
 elseif (UNIX AND NOT APPLE)
     set_target_properties(${PROJECT_NAME}
             PROPERTIES
