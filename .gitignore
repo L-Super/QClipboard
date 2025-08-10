@@ -10,5 +10,9 @@ build/
 
 CMakeLists.txt.user
 
+# version file
 src/version.h
+# rc file
+src/resources/win/app.rc
+
 .DS_Store
