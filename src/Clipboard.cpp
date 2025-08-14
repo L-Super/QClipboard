@@ -18,6 +18,7 @@
 #include <QCloseEvent>
 #include <QCryptographicHash>
 #include <QDebug>
+#include <QImage>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
@@ -117,6 +118,15 @@ Clipboard::Clipboard(QWidget *parent)
         qDebug() << "login failed." << message;
     });
     connect(sync.get(), &SyncServer::uploadFinished, [] {});
+    connect(sync.get(), &SyncServer::imageDownloadFinished,
+            [this](bool success, const QImage &image, const QString &message) {
+              if (success) {
+                qDebug() << "Image downloaded successfully, updating clipboard";
+                clipboard->setImage(image);
+              } else {
+                qDebug() << "Image download failed:" << message;
+              }
+            });
     connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString &message) {
       // json:
       //{
@@ -144,15 +154,14 @@ Clipboard::Clipboard(QWidget *parent)
           }
 
         } else if (type == "image") {
-          // TODO: support image and files in the future
-          //        QImage image = QImage::fromData(data.toUtf8());
-          //        clipboard->setImage(image);
-          //        qDebug()<<"image format"<<image.format();
-          auto meta = obj.value("meta").toObject();
-          auto filename = meta.value("filename").toString();
-          auto contentType = meta.value("content_type").toString();
-          auto size = meta.value("size").toInt();
-          qDebug() << "received image: "<<filename << size << contentType;
+          // 当接收到image类型时，data字段为图片的URL
+          const auto& imageUrl = data;
+          qDebug() << "received image url:" << imageUrl;
+
+          // 调用下载逻辑
+          if (sync) {
+            sync->downloadImage(imageUrl);
+          }
         } else if (type == "file") {
         }
 

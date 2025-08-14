@@ -3,6 +3,7 @@
 #include "ClipboardWebSocketClient.h"
 
 #include <QUrlQuery>
+#include <QImage>
 
 SyncServer::SyncServer(const QUrl &apiBaseUrl, QObject *parent) : QObject(parent), apiClient(new ClipboardApiClient(apiBaseUrl, this)) {
   setUrl(apiBaseUrl);
@@ -10,6 +11,7 @@ SyncServer::SyncServer(const QUrl &apiBaseUrl, QObject *parent) : QObject(parent
   connect(apiClient, &ClipboardApiClient::registrationFinished, this, &SyncServer::registrationFinished);
   connect(apiClient, &ClipboardApiClient::loginFinished, this, &SyncServer::handleLoginFinished);
   connect(apiClient, &ClipboardApiClient::uploadFinished, this, &SyncServer::uploadFinished);
+  connect(apiClient, &ClipboardApiClient::imageDownloadFinished, this, &SyncServer::imageDownloadFinished);
 }
 
 SyncServer::~SyncServer() {
@@ -45,6 +47,14 @@ void SyncServer::uploadClipboardData(const ClipboardData &data) {
     return;
   }
   apiClient->uploadClipboard(data, authToken);
+}
+
+void SyncServer::downloadImage(const QString &imageUrl) {
+  if (authToken.isEmpty()) {
+    emit imageDownloadFinished(false, QImage(), "Not authenticated");
+    return;
+  }
+  apiClient->downloadImage(imageUrl, authToken);
 }
 
 void SyncServer::startSync() {

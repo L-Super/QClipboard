@@ -25,18 +25,23 @@ public:
   // 上传剪贴板数据（二进制），需要携带已登录的 token
   void uploadClipboard(const ClipboardData &data, const QString &authToken);
 
+  // 下载图片
+  void downloadImage(const QString &imageUrl, const QString &authToken);
+
 signals:
   void registrationFinished(bool success, const QString &message);
   void loginFinished(bool success, const Token &token, const QString &message);
   void uploadFinished(bool success, const QString &message);
+  void imageDownloadFinished(bool success, const QImage &image, const QString &message);
 
 private slots:
   // 统一处理所有 reply
   void onNetworkReply(QNetworkReply *reply);
 
 private:
-  enum class Endpoint { Register, Login, Upload };
+  enum class Endpoint { Register, Login, Upload, DownloadImage };
   void handleJsonResponse(QNetworkReply *reply, Endpoint ep);
+  void handleImageDownload(QNetworkReply *reply);
 
 private:
   QNetworkAccessManager *manager;

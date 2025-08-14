@@ -25,6 +25,7 @@ public slots:
   void registerUser(const QString &username, const QString &password);
   void login(const User &user);
   void uploadClipboardData(const ClipboardData &data);
+  void downloadImage(const QString &imageUrl);
 
   // 手动控制 WebSocket（可选）
   void startSync();
@@ -35,6 +36,7 @@ signals:
   void registrationFinished(bool success, const QString &message);
   void loginFinished(bool success, const Token &token, const QString &message);
   void uploadFinished(bool success, const QString &message);
+  void imageDownloadFinished(bool success, const QImage &image, const QString &message);
 
   // 收到 WebSocket message
   void notifyMessageReceived(const QString &message);

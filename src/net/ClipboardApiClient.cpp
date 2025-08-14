@@ -6,6 +6,7 @@
 #include <QHttpPart>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QImage>
 
 ClipboardApiClient::ClipboardApiClient(const QUrl &baseUrl, QObject *parent)
     : QObject(parent), manager(new QNetworkAccessManager(this)), baseUrl(baseUrl) {
@@ -88,6 +89,16 @@ void ClipboardApiClient::uploadClipboard(const ClipboardData &data, const QStrin
   replyMap.insert(reply, Endpoint::Upload);
 }
 
+void ClipboardApiClient::downloadImage(const QString &imageUrl, const QString &authToken) {
+  // TODO：url not complete
+  QUrl url(imageUrl);
+  QNetworkRequest req(url);
+  req.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
+
+  QNetworkReply *reply = manager->get(req);
+  replyMap.insert(reply, Endpoint::DownloadImage);
+}
+
 void ClipboardApiClient::onNetworkReply(QNetworkReply *reply) {
   Endpoint ep = replyMap.take(reply);
 
@@ -104,7 +115,17 @@ void ClipboardApiClient::onNetworkReply(QNetworkReply *reply) {
     case Endpoint::Upload:
       emit uploadFinished(false, err);
       break;
+    case Endpoint::DownloadImage:
+      emit imageDownloadFinished(false, QImage(), err);
+      break;
     }
+    reply->deleteLater();
+    return;
+  }
+
+  // 处理图片下载
+  if (ep == Endpoint::DownloadImage) {
+    handleImageDownload(reply);
     reply->deleteLater();
     return;
   }
@@ -136,5 +157,16 @@ void ClipboardApiClient::handleJsonResponse(QNetworkReply *reply, Endpoint ep) {
 
     emit uploadFinished(true, bytes);
   } break;
+  }
+}
+
+void ClipboardApiClient::handleImageDownload(QNetworkReply *reply) {
+  const auto bytes = reply->readAll();
+  QImage image = QImage::fromData(bytes);
+  
+  if (image.isNull()) {
+    emit imageDownloadFinished(false, QImage(), "Failed to load image data");
+  } else {
+    emit imageDownloadFinished(true, image, "");
   }
 }
