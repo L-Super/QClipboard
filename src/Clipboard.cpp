@@ -98,7 +98,10 @@ Clipboard::Clipboard(QWidget *parent)
 #if defined(Q_OS_WIN)
     deviceType = DeviceType::windows;
 #elif defined(Q_OS_LINUX)
+#pragma push_macro("linux")
+#undef linux
     deviceType = DeviceType::linux;
+#pragma pop_macro("linux")
 #elif defined(Q_OS_MAC)
     deviceType = DeviceType::mac;
 #endif
@@ -155,7 +158,7 @@ Clipboard::Clipboard(QWidget *parent)
 
         } else if (type == "image") {
           // 当接收到image类型时，data字段为图片的URL
-          const auto& imageUrl = data;
+          const auto &imageUrl = data;
           qDebug() << "received image url:" << imageUrl;
 
           // 调用下载逻辑

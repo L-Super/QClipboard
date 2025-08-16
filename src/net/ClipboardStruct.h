@@ -2,7 +2,17 @@
 #include "nlohmann/json.hpp"
 #include <QString>
 
+// fix `error: expected identifier before numeric constant`
+#if defined(Q_OS_LINUX)
+#pragma push_macro("linux")
+#undef linux
+#endif
+
 enum class DeviceType { macos, windows, linux, ios, android, web };
+
+#if defined(Q_OS_LINUX)
+#pragma pop_macro("linux")
+#endif
 
 enum class ClipboardDataType { text, image, file };
 

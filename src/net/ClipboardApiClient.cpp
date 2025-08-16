@@ -71,7 +71,7 @@ void ClipboardApiClient::uploadClipboard(const ClipboardData &data, const QStrin
 
     QHttpPart filePart;
     // TODO: add file meta
-    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"file\"; filename=\"test.png\"");
+    filePart.setHeader(QNetworkRequest::ContentDispositionHeader, R"(form-data; name="file"; filename="test.png")");
     filePart.setHeader(QNetworkRequest::ContentTypeHeader, "image/png"); // 或其他类型
 
     QBuffer* buffer = new QBuffer();
@@ -90,8 +90,8 @@ void ClipboardApiClient::uploadClipboard(const ClipboardData &data, const QStrin
 }
 
 void ClipboardApiClient::downloadImage(const QString &imageUrl, const QString &authToken) {
-  // TODO：url not complete
-  QUrl url(imageUrl);
+  QUrl url = baseUrl.resolved(imageUrl);
+
   QNetworkRequest req(url);
   req.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
 
