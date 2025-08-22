@@ -1,33 +1,45 @@
 # QClipboard
 
-[English](README.md)
-
-## 概述
-
-一个跨平台的剪贴板工具，可以从剪贴板历史记录中选择对应的项进行粘贴。它提供了一种查看剪贴板历史记录和快速粘贴任何以前复制的内容的简便方式。
-
-![screenshot](images/screenshot1.png)
-
-使用全局快捷键 `Alt + V` 显示剪贴板
+一个基于Qt的跨平台剪贴板管理工具，支持多设备同步。可以从剪贴板历史记录中选择对应的项进行粘贴。它提供了一种查看剪贴板历史记录和快速粘贴任何以前复制的内容的简便方式。
 
 ## 特性
 
-+ 跨平台（Windows, Linux and ~~macOS~~）
-+ 快速浏览剪贴板历史记录中的项目，包括文本和图片
-+ 从全局热键或者托盘图标查看历史记录
-+ 可以删除历史记录中的项目
+- 📋 本地剪贴板管理
+- 🔄 多设备数据实时同步（文本、图片）
+- 🖼️ 图片自动同步下载和剪贴板更新
+- ⚡ 全局快捷键支持，支持自定义（默认`Alt + V`）
+- 🎯 系统托盘运行
 
-## 编译
+## 构建要求
 
-最低依赖要求 Qt6
+- C++ 20
+- Qt 6.0+
+
+## 构建
 
 ```bash
-git clone https://github.com/L-Super/QClipboard --recursive
-cd QClipboard
 cmake -B build
-cmake --build build
+cmake --build
 ```
 
+## 配置
+
+在配置文件中设置服务器信息：
+```json
+{
+  "server": {
+    "url": "https://your-sync-server.com",
+    "user": "your-email@example.com",
+    "password": "your-password",
+    "device_name": "My Device"
+  },
+  "shortcut": "Alt+V"
+}
+```
 ## 贡献
 
 欢迎贡献 - 提交 issue 和 PR。
+
+## 许可证
+
+[MIT License](LICENSE)
