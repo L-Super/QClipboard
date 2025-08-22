@@ -17,7 +17,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow
   buttonGroup->setExclusive(true);
   buttonGroup->addButton(ui->generalButton, 0);
   buttonGroup->addButton(ui->shortcutButton, 1);
-  buttonGroup->addButton(ui->syncButton, 2);
 
   // default is ui->generalButton
   ui->generalButton->setIcon(QIcon(":/resources/images/home-white.svg"));
@@ -51,13 +50,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow
       button->setIcon(QIcon(":/resources/images/keyboard-white.svg"));
     } else {
       button->setIcon(QIcon(":/resources/images/keyboard.svg"));
-    }
-  });
-  connect(ui->syncButton, &QToolButton::toggled, this, [this, button = ui->syncButton](bool checked) {
-    if (checked) {
-      button->setIcon(QIcon(":/resources/images/sync-white.svg"));
-    } else {
-      button->setIcon(QIcon(":/resources/images/sync.svg"));
     }
   });
 

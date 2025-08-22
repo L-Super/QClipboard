@@ -9,7 +9,7 @@ AboutDialog::AboutDialog(QWidget *parent)
     : QDialog(parent), ui(new Ui::AboutDialog) {
   ui->setupUi(this);
   ui->imagePushButton->setEnabled(false);
-  ui->imagePushButton->setIcon(QIcon(":/resources/images/clipboard2.svg"));
+  ui->imagePushButton->setIcon(QIcon(":/resources/icon.png"));
   const QString version = qApp->applicationVersion();
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
   const QString md{
