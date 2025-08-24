@@ -40,6 +40,9 @@ elseif (APPLE)
     set(MAC_RES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/resources/mac")
     # It needs to be added to add_executable to display the bundle icon on macOS
     set(RES_FILES ${RES_FILES} ${MAC_RES_PATH}/icon.icns)
+elseif (UNIX AND NOT APPLE)
+    set(LINUX_RES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/resources/linux)
+    configure_file(${LINUX_RES_PATH}/QClipboard.desktop.in ${LINUX_RES_PATH}/QClipboard.desktop @ONLY)
 endif ()
 
 add_executable(${PROJECT_NAME}

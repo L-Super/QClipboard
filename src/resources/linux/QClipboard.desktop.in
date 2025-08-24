@@ -1,0 +1,10 @@
+[Desktop Entry]
+Categories=System; Office;
+Type=Application
+Keywords=clipboard;cross-platform clipboard;
+Name=QClipboard
+Exec=AppRun %F
+Icon=icon
+Comment=A cross-platform clipboard tool that allows selecting items from clipboard history to paste.
+Terminal=true
+Version=@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@

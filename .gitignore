@@ -14,5 +14,7 @@ CMakeLists.txt.user
 src/version.h
 # rc file
 src/resources/win/app.rc
+src/resources/linux/QClipboard.desktop
 
+# mac cache
 .DS_Store
