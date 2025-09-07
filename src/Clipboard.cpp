@@ -194,7 +194,11 @@ void Clipboard::CreateTrayAction() {
   trayMenu->addAction(exitAction);
 
   connect(homeAction, &QAction::triggered, this, [this] {
-    homeWidget->SetOnlineStatus(sync->isLoggedIn());
+    if (sync) {
+      homeWidget->SetOnlineStatus(sync->isLoggedIn());
+    } else {
+      homeWidget->SetOnlineStatus(false);
+    }
     homeWidget->show();
     homeWidget->raise();
   });
@@ -241,7 +245,7 @@ void Clipboard::InitSyncServer() {
     deviceType = DeviceType::linux;
 #pragma pop_macro("linux")
 #elif defined(Q_OS_MAC)
-    deviceType = DeviceType::mac;
+    deviceType = DeviceType::macos;
 #endif
 
     sync = std::make_unique<SyncServer>(url);
