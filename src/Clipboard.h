@@ -38,7 +38,8 @@ class Clipboard : public QWidget {
   private:
     void InitTrayMenu();
     void CreateTrayAction();
-    void SetShortcut();
+    void InitShortcut();
+    void InitSyncServer();
 
   protected:
     void closeEvent(QCloseEvent *event) override;
