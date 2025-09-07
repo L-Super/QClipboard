@@ -46,6 +46,15 @@ void ClipboardApiClient::login(const User &user) {
   replyMap.insert(reply, Endpoint::Login);
 }
 
+void ClipboardApiClient::verifyToken(const QString &authToken) {
+  QUrl url = baseUrl.resolved(QUrl("/auth/verify-token"));
+  QNetworkRequest req(url);
+  req.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
+
+  QNetworkReply *reply = manager->get(req);
+  replyMap.insert(reply, Endpoint::VerifyToken);
+}
+
 void ClipboardApiClient::uploadClipboard(const ClipboardData &data, const QString &authToken) {
   QUrl url = baseUrl.resolved(QUrl("/clipboard"));
   QNetworkRequest req(url);
@@ -118,6 +127,9 @@ void ClipboardApiClient::onNetworkReply(QNetworkReply *reply) {
     case Endpoint::DownloadImage:
       emit imageDownloadFinished(false, QImage(), err);
       break;
+    case Endpoint::VerifyToken:
+      emit verifyTokenFinished(false, err);
+      break;
     }
     reply->deleteLater();
     return;
@@ -156,6 +168,11 @@ void ClipboardApiClient::handleJsonResponse(QNetworkReply *reply, Endpoint ep) {
     QString created = obj.value("created_at").toString();
 
     emit uploadFinished(true, bytes);
+  } break;
+  case Endpoint::VerifyToken: {
+    bool success = obj.value("code").toInt() == 0;
+    QString message = obj.value("message").toString();
+    emit verifyTokenFinished(success, message);
   } break;
   }
 }

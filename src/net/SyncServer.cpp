@@ -2,7 +2,9 @@
 #include "ClipboardApiClient.h"
 #include "ClipboardWebSocketClient.h"
 
+#include <QEventLoop>
 #include <QImage>
+#include <QTimer>
 #include <QUrlQuery>
 
 SyncServer::SyncServer(const QUrl &apiBaseUrl, QObject *parent)
@@ -37,10 +39,10 @@ bool SyncServer::setToken(const QString &token) {
     authToken = token;
     handleLoginFinished(true, {.accessToken = token, .refreshToken = ""}, "");
     return true;
-  } else {
-    handleLoginFinished(false, {}, "");
-    return false;
   }
+
+  handleLoginFinished(false, {}, "");
+  return false;
 }
 
 bool SyncServer::isLoggedIn() const { return isLoginSuccessful; }
@@ -116,6 +118,37 @@ void SyncServer::handleLoginFinished(bool success, const Token &token, const QSt
 }
 
 bool SyncServer::verifyTokenValid(const QString &token) {
-  // TODO:
-  return true;
+  // 发起 /auth/verify-token 请求，等待结果（带超时）
+  QEventLoop loop;
+  QTimer timer;
+  timer.setSingleShot(true);
+  bool ok = false;
+  QString msg;
+
+  auto onFinished = [&](bool success, const QString &message) {
+    ok = success;
+    msg = message;
+    if (loop.isRunning())
+      loop.quit();
+  };
+
+  QObject::connect(&timer, &QTimer::timeout, &loop, [&] {
+    ok = false;
+    msg = "verify-token timeout";
+    if (loop.isRunning())
+      loop.quit();
+  });
+
+  QObject::connect(apiClient, &ClipboardApiClient::verifyTokenFinished, &loop, onFinished);
+
+  // 发送请求
+  apiClient->verifyToken(token);
+
+  // 超时设置 5s
+  timer.start(5000);
+  loop.exec();
+
+  QObject::disconnect(apiClient, &ClipboardApiClient::verifyTokenFinished, &loop, nullptr);
+
+  return ok;
 }

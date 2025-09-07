@@ -18,6 +18,7 @@
 #include <QCloseEvent>
 #include <QCryptographicHash>
 #include <QDebug>
+#include <QDesktopServices>
 #include <QImage>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -101,6 +102,9 @@ void Clipboard::ReloadSyncServer() {
   }
   else {
     qDebug() << "ReloadSyncServer failed";
+    if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
+      QDesktopServices::openUrl(QUrl(QString::fromStdString(url.value())));
+    }
   }
 }
 
