@@ -6,6 +6,7 @@
 #include "ui_MainWindow.h"
 
 #include <QButtonGroup>
+#include <QDesktopServices>
 #include <QTimer>
 
 #include "QHotkey"
@@ -86,6 +87,14 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow
   //         [this, hotkey]() { qDebug() << "editing finished"; });
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::keySequenceChanged, this,
   //         [this](const QKeySequence &keySequence) { qDebug() << "keySequenceChanged" << keySequence; });
+  connect(ui->loginButton, &QPushButton::clicked, this, [this]() {
+    if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
+      QDesktopServices::openUrl(QUrl(QString::fromStdString(url.value())));
+    } else {
+      // open default url
+      QDesktopServices::openUrl(QUrl("https://clipboard-api.limuran.top"));
+    }
+  });
 }
 
 MainWindow::~MainWindow() { delete ui; }
@@ -119,13 +128,13 @@ void MainWindow::SetHotkey(QHotkey *hotkey) {
 }
 
 void MainWindow::SetOnlineStatus(bool online) {
-  auto serverConfig = Config::instance().getServerConfig();
-  if (online && serverConfig.has_value()) {
-    QString user = QString::fromStdString(serverConfig.value().user);
+  auto userInfo = Config::instance().getUserInfo();
+  if (online && userInfo.has_value()) {
+    QString user = QString::fromStdString(userInfo.value().email);
 
     ui->accountLabel->setText(user);
     ui->accountStatusLabel->setText("<span style='color:green;'>在线</span>");
-    ui->deviceNameLineEdit->setPlaceholderText(QString::fromStdString(serverConfig.value().device_name));
+    ui->deviceNameLineEdit->setPlaceholderText(QString::fromStdString(userInfo.value().device_name));
     ui->loginButton->hide();
   } else {
     ui->accountLabel->clear();
@@ -134,9 +143,7 @@ void MainWindow::SetOnlineStatus(bool online) {
   }
 }
 
-void MainWindow::showEvent(QShowEvent *event) {
-  QWidget::showEvent(event);
-}
+void MainWindow::showEvent(QShowEvent *event) { QWidget::showEvent(event); }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   hide();

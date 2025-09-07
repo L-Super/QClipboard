@@ -2,10 +2,11 @@
 #include "ClipboardApiClient.h"
 #include "ClipboardWebSocketClient.h"
 
-#include <QUrlQuery>
 #include <QImage>
+#include <QUrlQuery>
 
-SyncServer::SyncServer(const QUrl &apiBaseUrl, QObject *parent) : QObject(parent), apiClient(new ClipboardApiClient(apiBaseUrl, this)) {
+SyncServer::SyncServer(const QUrl &apiBaseUrl, QObject *parent)
+    : QObject(parent), apiClient(new ClipboardApiClient(apiBaseUrl, this)) {
   setUrl(apiBaseUrl);
   // 绑定 HTTP 客户端信号
   connect(apiClient, &ClipboardApiClient::registrationFinished, this, &SyncServer::registrationFinished);
@@ -31,9 +32,18 @@ void SyncServer::setUrl(const QUrl &apiBaseUrl) {
   wsBaseUrl.setPath("/sync/notify");
 }
 
-bool SyncServer::isLoggedIn() const {
-  return isLoginSuccessful;
+bool SyncServer::setToken(const QString &token) {
+  if (verifyTokenValid(token)) {
+    authToken = token;
+    handleLoginFinished(true, {.accessToken = token, .refreshToken = ""}, "");
+    return true;
+  } else {
+    handleLoginFinished(false, {}, "");
+    return false;
+  }
 }
+
+bool SyncServer::isLoggedIn() const { return isLoginSuccessful; }
 
 void SyncServer::registerUser(const QString &username, const QString &password) {
   apiClient->registerUser(username, password);
@@ -103,4 +113,9 @@ void SyncServer::handleLoginFinished(bool success, const Token &token, const QSt
 
   // 自动建立连接
   wsClient->connectToServer();
+}
+
+bool SyncServer::verifyTokenValid(const QString &token) {
+  // TODO:
+  return true;
 }

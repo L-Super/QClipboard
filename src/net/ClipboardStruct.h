@@ -43,3 +43,10 @@ struct ServerConfig {
   std::string device_name;
 };
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ServerConfig, url, user, password, device_id, device_name)
+
+struct UserInfo {
+  std::string email;
+  std::string token;
+  std::string device_name;
+};
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(UserInfo, email, token, device_name)

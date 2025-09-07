@@ -24,6 +24,8 @@ class Clipboard : public QWidget {
     explicit Clipboard(QWidget *parent = nullptr);
     ~Clipboard() override;
 
+    void ReloadSyncServer();
+
   protected:
     void AddItem(const QVariant &data, const QByteArray &hash);
     void MoveItemToTop(const QByteArray &hashValue);
@@ -39,7 +41,7 @@ class Clipboard : public QWidget {
     void InitTrayMenu();
     void CreateTrayAction();
     void InitShortcut();
-    void InitSyncServer();
+    bool InitSyncServer();
 
   protected:
     void closeEvent(QCloseEvent *event) override;

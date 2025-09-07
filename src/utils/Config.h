@@ -37,7 +37,13 @@ public:
   void setServerConfig(const ServerConfig& server);
   std::optional<ServerConfig> getServerConfig() const;
 
+  void setUserInfo(const UserInfo& userInfo);
+  std::optional<UserInfo> getUserInfo() const;
+
+protected:
+  void fillDefaultValues();
+
 private:
   nlohmann::json data_;
-  std::filesystem::path filepath_;
+  std::filesystem::path filepath_{};
 };

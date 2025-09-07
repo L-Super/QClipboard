@@ -95,6 +95,15 @@ Clipboard::Clipboard(QWidget *parent)
 
 Clipboard::~Clipboard() { homeWidget->deleteLater(); }
 
+void Clipboard::ReloadSyncServer() {
+  if (InitSyncServer()) {
+    qDebug() << "ReloadSyncServer success";
+  }
+  else {
+    qDebug() << "ReloadSyncServer failed";
+  }
+}
+
 void Clipboard::DataChanged() {
   QVariant data;
   QByteArray hashValue;
@@ -231,93 +240,85 @@ void Clipboard::InitShortcut() {
   connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
 
-void Clipboard::InitSyncServer() {
-  auto serverInfo = Config::instance().getServerConfig();
-  if (serverInfo.has_value()) {
-    auto url = QString::fromStdString(serverInfo->url);
-
-    DeviceType deviceType;
-#if defined(Q_OS_WIN)
-    deviceType = DeviceType::windows;
-#elif defined(Q_OS_LINUX)
-#pragma push_macro("linux")
-#undef linux
-    deviceType = DeviceType::linux;
-#pragma pop_macro("linux")
-#elif defined(Q_OS_MAC)
-    deviceType = DeviceType::macos;
-#endif
-
-    sync = std::make_unique<SyncServer>(url);
-    sync->setUrl(url);
-    sync->login({.email = QString::fromStdString(serverInfo->user),
-                 .password = QString::fromStdString(serverInfo->password),
-                 .deviceId = utils::generateDeviceId(),
-                 .deviceName = QString::fromStdString(serverInfo->device_name),
-                 .deviceType = deviceType});
-    connect(sync.get(), &SyncServer::registrationFinished, [] {});
-    connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token &token, const QString &message) {
-      if (success)
-        qDebug() << "login successful";
-      else
-        qDebug() << "login failed." << message;
-    });
-    connect(sync.get(), &SyncServer::uploadFinished, [] {});
-    connect(sync.get(), &SyncServer::imageDownloadFinished,
-            [this](bool success, const QImage &image, const QString &message) {
-              if (success) {
-                qDebug() << "Image downloaded successfully, updating clipboard";
-                clipboard->setImage(image);
-              } else {
-                qDebug() << "Image download failed:" << message;
-              }
-            });
-    connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString &message) {
-      // json:
-      //{
-      //  "action":"update",
-      //  "type":"", // text, image, file
-      //  "data":"",
-      //  "data_hash":"",
-      //  "meta":{}
-      //}
-
-      qDebug() << "websocket received:" << message;
-      try {
-        const auto doc = QJsonDocument::fromJson(message.toUtf8());
-        const auto obj = doc.object();
-        auto type = obj.value("type").toString();
-        auto data = obj.value("data").toString();
-
-        if (type == "text") {
-          auto uncompressData = qUncompress(data.toUtf8());
-          if (uncompressData.isNull() || uncompressData.isEmpty()) {
-            qDebug() << "Maybe not use qCompress(), add raw data";
-            clipboard->setText(data);
-          } else {
-            clipboard->setText(uncompressData);
-          }
-
-        } else if (type == "image") {
-          // 当接收到image类型时，data字段为图片的URL
-          const auto &imageUrl = data;
-          qDebug() << "received image url:" << imageUrl;
-
-          // 调用下载逻辑
-          if (sync) {
-            sync->downloadImage(imageUrl);
-          }
-        } else if (type == "file") {
-        }
-
-      } catch (const std::exception &e) {
-        qDebug() << "websocket received exception." << e.what();
+bool Clipboard::InitSyncServer() {
+  auto userInfo = Config::instance().getUserInfo();
+  if (userInfo.has_value()) {
+    if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
+      sync = std::make_unique<SyncServer>(QString::fromStdString(url.value()));
+      if (sync->setToken(QString::fromStdString(userInfo.value().token))) {
+        qDebug() << "token is valid";
+      } else {
+        qDebug() << "token is invalid";
+        sync.reset();
+        return false;
       }
-    });
-    connect(sync.get(), &SyncServer::syncConnected, [] {});
-    connect(sync.get(), &SyncServer::syncDisconnected, [] {});
-    connect(sync.get(), &SyncServer::syncError, [] {});
+
+      connect(sync.get(), &SyncServer::registrationFinished, [] {});
+      connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token &token, const QString &message) {
+        if (success)
+          qDebug() << "login successful";
+        else
+          qDebug() << "login failed." << message;
+      });
+      connect(sync.get(), &SyncServer::uploadFinished, [] {});
+      connect(sync.get(), &SyncServer::imageDownloadFinished,
+              [this](bool success, const QImage &image, const QString &message) {
+                if (success) {
+                  qDebug() << "Image downloaded successfully, updating clipboard";
+                  clipboard->setImage(image);
+                } else {
+                  qDebug() << "Image download failed:" << message;
+                }
+              });
+      connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString &message) {
+        // json:
+        //{
+        //  "action":"update",
+        //  "type":"", // text, image, file
+        //  "data":"",
+        //  "data_hash":"",
+        //  "meta":{}
+        //}
+
+        qDebug() << "websocket received:" << message;
+        try {
+          const auto doc = QJsonDocument::fromJson(message.toUtf8());
+          const auto obj = doc.object();
+          auto type = obj.value("type").toString();
+          auto data = obj.value("data").toString();
+
+          if (type == "text") {
+            auto uncompressData = qUncompress(data.toUtf8());
+            if (uncompressData.isNull() || uncompressData.isEmpty()) {
+              qDebug() << "Maybe not use qCompress(), add raw data";
+              clipboard->setText(data);
+            } else {
+              clipboard->setText(uncompressData);
+            }
+
+          } else if (type == "image") {
+            // 当接收到image类型时，data字段为图片的URL
+            const auto &imageUrl = data;
+            qDebug() << "received image url:" << imageUrl;
+
+            // 调用下载逻辑
+            if (sync) {
+              sync->downloadImage(imageUrl);
+            }
+          } else if (type == "file") {
+          }
+
+        } catch (const std::exception &e) {
+          qDebug() << "websocket received exception." << e.what();
+        }
+      });
+      connect(sync.get(), &SyncServer::syncConnected, [] {});
+      connect(sync.get(), &SyncServer::syncDisconnected, [] {});
+      connect(sync.get(), &SyncServer::syncError, [] {});
+      return true;
+    }
   }
+  return false;
 }
 
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {

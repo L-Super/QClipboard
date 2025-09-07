@@ -17,6 +17,7 @@ public:
   ~SyncServer() override;
 
   void setUrl(const QUrl &apiBaseUrl);
+  bool setToken(const QString &token);
 
   bool isLoggedIn() const;
 
@@ -49,6 +50,7 @@ signals:
 private slots:
   // 处理登录成功后的逻辑：保存 token 并（重新）启动 WebSocket
   void handleLoginFinished(bool success, const Token &token, const QString &message);
+  bool verifyTokenValid(const QString& token);
 
 private:
   QUrl apiBaseUrl;

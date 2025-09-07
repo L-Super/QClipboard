@@ -32,6 +32,7 @@ bool Config::load(const fs::path &file) {
 
   try {
     data_ = nlohmann::json::parse(in);
+    fillDefaultValues();
   } catch (const std::exception &e) {
 
     return false;
@@ -49,21 +50,39 @@ bool Config::save() const {
   return true;
 }
 
-void Config::setServerConfig(const ServerConfig& server) {
-  data_["server"] = server;
-}
+void Config::setServerConfig(const ServerConfig &server) { data_["server"] = server; }
 
 std::optional<ServerConfig> Config::getServerConfig() const {
-    if (!data_.contains("server"))
-        return std::nullopt;
-
-    try {
-      ServerConfig server = data_["server"];
-      return std::make_optional(server);
-    } catch (const std::exception &e) {
-      std::cerr << e.what() << std::endl;
-    }
-
-
+  if (!data_.contains("server"))
     return std::nullopt;
+
+  try {
+    ServerConfig server = data_["server"];
+    return std::make_optional(server);
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << std::endl;
+  }
+
+  return std::nullopt;
+}
+
+void Config::setUserInfo(const UserInfo &userInfo) { data_["user_info"] = userInfo; }
+
+std::optional<UserInfo> Config::getUserInfo() const {
+  if (!data_.contains("user_info"))
+    return std::nullopt;
+
+  try {
+    UserInfo userInfo = data_["user_info"];
+    return std::make_optional(userInfo);
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << std::endl;
+  }
+  return std::nullopt;
+}
+
+void Config::fillDefaultValues() {
+  if (!data_.contains("url")) {
+    data_["url"] = "https://clipboard-api.limuran.top";
+  }
 }
