@@ -12,7 +12,7 @@
 #include <QUrl>
 
 int main(int argc, char *argv[]) {
-  SingleApplication a(argc, argv);
+  SingleApplication a(argc, argv, true);
 
   // 处理命令行参数中的协议URL
   QString protocolUrl;
@@ -34,14 +34,6 @@ int main(int argc, char *argv[]) {
 
     return 0;
   }
-
-  // 创建协议处理器
-  ProtocolHandler protocolHandler;
-  QObject::connect(&a, &SingleApplication::receivedMessage, &protocolHandler,
-                   [&protocolHandler](int instanceId, QByteArray message) {
-                     qDebug() << "instance id:" << instanceId << "message:" << message;
-                     protocolHandler.HandleProtocolUrl(message);
-                   });
 
   a.setWindowIcon(QIcon(":/resources/icon.png"));
   a.setApplicationVersion(VERSION_STR);
@@ -66,12 +58,18 @@ int main(int argc, char *argv[]) {
 
   Clipboard c;
   c.show();
-
+  // 创建协议处理器
+  ProtocolHandler protocolHandler;
+  QObject::connect(&a, &SingleApplication::receivedMessage, &protocolHandler,
+                   [&protocolHandler](int instanceId, QByteArray message) {
+                     qDebug() << "instance id:" << instanceId << "message:" << message;
+                     protocolHandler.HandleProtocolUrl(message);
+                   });
   QObject::connect(&a, &SingleApplication::instanceStarted, &c, &Clipboard::show);
   // 连接协议处理器的信号到剪贴板对象
   QObject::connect(&protocolHandler, &ProtocolHandler::loginDataReceived, &c,
                    [&c](const UserInfo &userInfo, const QVariantMap &additionalData) {
-                     qDebug() << "Login data received - email:" << userInfo.email;
+                     qDebug() << "Data received from custom protocol";
                      qDebug() << "Additional data:" << additionalData;
 
                      Config::instance().setUserInfo(userInfo);
