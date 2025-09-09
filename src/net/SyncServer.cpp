@@ -18,10 +18,7 @@ SyncServer::SyncServer(const QUrl &apiBaseUrl, QObject *parent)
 }
 
 SyncServer::~SyncServer() {
-  if (wsClient) {
-    wsClient->disconnectFromServer();
-    delete wsClient;
-  }
+  stopSync();
 }
 
 void SyncServer::setUrl(const QUrl &apiBaseUrl) {

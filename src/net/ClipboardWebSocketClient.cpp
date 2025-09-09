@@ -29,7 +29,9 @@ void ClipboardWebSocketClient::connectToServer() {
         webSocket.state() == QAbstractSocket::ConnectingState) {
         return;
     }
-    qDebug() << "Connecting to" << serverUrl.toString();
+    QUrl url(serverUrl);
+    url.setQuery({});   // 清空查询
+    qDebug() << "Connecting to" << url.toString();;
     webSocket.open(serverUrl);
 }
 
@@ -64,7 +66,7 @@ void ClipboardWebSocketClient::onBinaryMessageReceived(const QByteArray &message
 }
 
 void ClipboardWebSocketClient::onError(QAbstractSocket::SocketError error) {
-    qWarning() << "WebSocket error:" << webSocket.errorString();
+    qWarning() << "WebSocket error:" << error << webSocket.errorString();
     emit errorOccurred(error);
 
     // 启动重连

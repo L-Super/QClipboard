@@ -248,6 +248,10 @@ bool Clipboard::InitSyncServer() {
   auto userInfo = Config::instance().getUserInfo();
   if (userInfo.has_value()) {
     if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
+      if (sync) {
+        sync->stopSync();
+        sync.reset();
+      }
       sync = std::make_unique<SyncServer>(QString::fromStdString(url.value()));
       if (sync->setToken(QString::fromStdString(userInfo.value().token))) {
         qDebug() << "token is valid";
