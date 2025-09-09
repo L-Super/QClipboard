@@ -30,7 +30,7 @@ void ClipboardWebSocketClient::connectToServer() {
         return;
     }
     QUrl url(serverUrl);
-    url.setQuery({});   // 清空查询
+    url.setQuery(QString());   // 清空查询
     qDebug() << "Connecting to" << url.toString();;
     webSocket.open(serverUrl);
 }
