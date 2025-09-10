@@ -9,11 +9,11 @@
         <file>resources/images/sync.svg</file>
         <file>resources/images/keyboard.svg</file>
         <file>resources/images/home-white.svg</file>
-        <file>resources/images/home.png</file>
         <file>resources/images/sync-white.svg</file>
         <file>resources/images/keyboard-white.svg</file>
         <file>resources/icon.svg</file>
         <file>resources/icon.png</file>
+        <file>resources/icon-for-mac.png</file>
     </qresource>
     <qresource prefix="/qss">
         <file>resources/style.css</file>

@@ -35,7 +35,12 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
+#ifdef Q_OS_MACOS
+  a.setWindowIcon(QIcon(":/resources/icon-for-mac.png"));
+#else
   a.setWindowIcon(QIcon(":/resources/icon.png"));
+#endif
+
   a.setApplicationVersion(VERSION_STR);
 
   QFile style(":/qss/resources/style.css");
