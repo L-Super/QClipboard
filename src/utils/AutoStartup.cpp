@@ -7,9 +7,31 @@
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QSettings>
 #include <QStandardPaths>
+
+namespace {
+const QString plistTemplate = R"(
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>%1</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>%2</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>
+)";
+}
 
 AutoStartup::AutoStartup() {}
 
@@ -19,7 +41,7 @@ void AutoStartup::SetAutoStartup(bool enable) {
 #elif defined(Q_OS_LINUX)
   SetLinuxAutoStartup(enable);
 #elif defined(Q_OS_MAC)
-  //TODO:
+  SetMacAutoStartup(enable);
 #endif
 }
 
@@ -29,7 +51,7 @@ bool AutoStartup::IsAutoStartup() {
 #elif defined(Q_OS_LINUX)
   return IsLinuxAutoStartup();
 #elif defined(Q_OS_MAC)
-  //TODO:
+  return IsMacAutoStartup();
 #endif
 
   // another return true
@@ -147,5 +169,69 @@ bool AutoStartup::IsLinuxAutoStartup() {
 
   file.close();
   return value == "false" ? true : false;
+}
+
+#elif defined(Q_OS_MAC)
+void AutoStartup::SetMacAutoStartup(bool enable) {
+  QString launchAgentDirPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/Library/LaunchAgents";
+  // 尝试从App的Info.plist中读取CFBundleIdentifier
+  QSettings settings(QCoreApplication::applicationDirPath() + "/../Info.plist", QSettings::NativeFormat);
+  QString bundleIdentifier = settings.value("CFBundleIdentifier").toString();
+  if (bundleIdentifier.isEmpty()) {
+    bundleIdentifier = "com.QClipboard.QClipboard";
+  }
+  QString plistFileName = bundleIdentifier + ".plist";
+  QString plistFilePath = launchAgentDirPath + "/" + plistFileName;
+
+  if (enable) {
+    QDir dir(launchAgentDirPath);
+    if (!dir.exists()) {
+      if (!dir.mkpath(".")) {
+        qWarning() << "Failed to create LaunchAgents directory";
+        return;
+      }
+    }
+
+    QString appPath = QCoreApplication::applicationFilePath();
+
+    // fill template string
+    QString plistContent = plistTemplate.arg(bundleIdentifier, appPath);
+
+    QFile plistFile(plistFilePath);
+    if (!plistFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+      qWarning() << "Failed to open plist file for writing:" << plistFilePath;
+      return;
+    }
+    plistFile.write(plistContent.toUtf8());
+    plistFile.close();
+
+    qDebug() << "Auto-start enabled. Plist file created at:" << plistFilePath;
+  } else {
+    QFile plistFile(plistFilePath);
+    if (plistFile.exists()) {
+      if (!plistFile.remove()) {
+        qWarning() << "Failed to remove plist file:" << plistFilePath;
+      }
+      qDebug() << "Auto-start disabled. Plist file removed.";
+    }
+  }
+}
+
+bool AutoStartup::IsMacAutoStartup() {
+  QString launchAgentDirPath = QStandardPaths::writableLocation(QStandardPaths::HomeLocation) + "/Library/LaunchAgents";
+  // 尝试从App的Info.plist中读取CFBundleIdentifier
+  QSettings settings(QCoreApplication::applicationDirPath() + "/../Info.plist", QSettings::NativeFormat);
+  QString bundleIdentifier = settings.value("CFBundleIdentifier").toString();
+  if (bundleIdentifier.isEmpty()) {
+    bundleIdentifier = "com.QClipboard.QClipboard";
+  }
+  QString plistFileName = bundleIdentifier + ".plist";
+  QString plistFilePath = launchAgentDirPath + "/" + plistFileName;
+
+  QFile plistFile(plistFilePath);
+  if (plistFile.exists()) {
+    return true;
+  }
+  return false;
 }
 #endif
