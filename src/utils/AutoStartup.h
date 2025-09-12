@@ -21,6 +21,9 @@ private:
 #elif defined(Q_OS_LINUX)
   void SetLinuxAutoStartup(bool enable);
   bool IsLinuxAutoStartup();
+#elif defined(Q_OS_MAC)
+  void SetMacAutoStartup(bool enable);
+  bool IsMacAutoStartup();
 #endif
 
 private:
