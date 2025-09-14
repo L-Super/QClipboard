@@ -4,7 +4,8 @@
 
 #include "ProtocolHandler.h"
 
-#include "../net/ClipboardStruct.h"
+#include "ClipboardStruct.h"
+#include "../utils/Logger.hpp"
 
 #include <QDebug>
 #include <QRegularExpression>
@@ -19,7 +20,7 @@ const QString LOGIN_ACTION = "login";
 ProtocolHandler::ProtocolHandler(QObject *parent) : QObject(parent) {}
 
 void ProtocolHandler::HandleProtocolUrl(const QString &url) {
-  qDebug() << "Handling protocol URL:" << url;
+  spdlog::info("Handling protocol URL:{}", url);
 
   if (!ValidateUrl(url)) {
     emit errorOccurred("Invalid protocol URL format");

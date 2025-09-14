@@ -1,8 +1,9 @@
 #include "Clipboard.h"
 #include "SingleApplication"
+#include "net/ProtocolHandler.h"
 #include "utils/Config.h"
-#include "utils/ProtocolHandler.h"
-#include "utils/ProtocolRegistry.h"
+#include "utils/Logger.hpp"
+#include "net/ProtocolRegistry.h"
 #include "version.h"
 
 #include <QApplication>
@@ -13,6 +14,8 @@
 
 int main(int argc, char *argv[]) {
   SingleApplication a(argc, argv, true);
+  auto logFilePath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/logs/app.log";
+  initLogging(logFilePath.toStdString());
 
   // 处理命令行参数中的协议URL
   QString protocolUrl;
@@ -20,14 +23,13 @@ int main(int argc, char *argv[]) {
     auto arguments = QString::fromLocal8Bit(argv[1]);
     if (arguments.startsWith("qclipboard://")) {
       protocolUrl = arguments;
-      qDebug() << "Received protocol URL from command line:" << protocolUrl;
     }
   }
 
   if (a.isSecondary()) {
-    qDebug() << "App already running.";
     qDebug() << "Primary instance PID: " << a.primaryPid();
     qDebug() << "Primary instance user: " << a.primaryUser();
+    spdlog::info("Secondary app is launching.");
     if (!protocolUrl.isEmpty()) {
       a.sendMessage(protocolUrl.toUtf8());
     }
@@ -74,7 +76,7 @@ int main(int argc, char *argv[]) {
   // 连接协议处理器的信号到剪贴板对象
   QObject::connect(&protocolHandler, &ProtocolHandler::loginDataReceived, &c,
                    [&c](const UserInfo &userInfo, const QVariantMap &additionalData) {
-                     qDebug() << "Data received from custom protocol";
+                     spdlog::info("Data received from custom protocol");
                      qDebug() << "Additional data:" << additionalData;
 
                      Config::instance().setUserInfo(userInfo);
@@ -89,7 +91,7 @@ int main(int argc, char *argv[]) {
                    });
 
   QObject::connect(&protocolHandler, &ProtocolHandler::errorOccurred,
-                   [](const QString &errorMessage) { qDebug() << "Protocol error:" << errorMessage; });
+                   [](const QString &errorMessage) { spdlog::info("Protocol error:{}", errorMessage); });
 
   if (!protocolUrl.isEmpty()) {
     protocolHandler.HandleProtocolUrl(protocolUrl.toUtf8());

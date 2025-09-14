@@ -1,12 +1,13 @@
 #include "ClipboardApiClient.h"
 #include "magic_enum/magic_enum.hpp"
+#include "../utils/Logger.hpp"
 
 #include <QBuffer>
 #include <QHttpMultiPart>
 #include <QHttpPart>
+#include <QImage>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QImage>
 
 ClipboardApiClient::ClipboardApiClient(const QUrl &baseUrl, QObject *parent)
     : QObject(parent), manager(new QNetworkAccessManager(this)), baseUrl(baseUrl) {
@@ -113,7 +114,7 @@ void ClipboardApiClient::onNetworkReply(QNetworkReply *reply) {
 
   if (reply->error() != QNetworkReply::NoError) {
     QString err = reply->errorString();
-    qDebug() << "onNetworkReply. Error:" << err;
+    spdlog::error("On network reply. Error: {}", err);
     switch (ep) {
     case Endpoint::Register:
       emit registrationFinished(false, err);

@@ -10,6 +10,7 @@
 #include "net/SyncServer.h"
 #include "utils/Config.h"
 #include "utils/Util.h"
+#include "utils/Logger.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -98,10 +99,10 @@ Clipboard::~Clipboard() { homeWidget->deleteLater(); }
 
 void Clipboard::ReloadSyncServer() {
   if (InitSyncServer()) {
-    qDebug() << "ReloadSyncServer success";
+    spdlog::info("ReloadSyncServer success");
   }
   else {
-    qDebug() << "ReloadSyncServer failed";
+    spdlog::error("ReloadSyncServer failed");
     if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
       QDesktopServices::openUrl(QUrl(QString::fromStdString(url.value())));
     }
@@ -240,7 +241,7 @@ void Clipboard::InitShortcut() {
                          QString("无法设置快捷键: %1\n请检查是否与其他程序冲突。").arg(shortcutStr));
     return;
   }
-  qDebug() << "Registered global shortcut is" << shortcutStr << hotkey->shortcut();
+  spdlog::info("Registered global shortcut is {}", shortcutStr);
   connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
 
@@ -254,9 +255,9 @@ bool Clipboard::InitSyncServer() {
       }
       sync = std::make_unique<SyncServer>(QString::fromStdString(url.value()));
       if (sync->setToken(QString::fromStdString(userInfo.value().token))) {
-        qDebug() << "token is valid";
+        spdlog::info("Token is valid");
       } else {
-        qDebug() << "token is invalid";
+        spdlog::info("Token is invalid");
         sync.reset();
         return false;
       }
@@ -272,10 +273,10 @@ bool Clipboard::InitSyncServer() {
       connect(sync.get(), &SyncServer::imageDownloadFinished,
               [this](bool success, const QImage &image, const QString &message) {
                 if (success) {
-                  qDebug() << "Image downloaded successfully, updating clipboard";
+                  spdlog::info("Image downloaded successfully, updating clipboard");
                   clipboard->setImage(image);
                 } else {
-                  qDebug() << "Image download failed:" << message;
+                  spdlog::info("Image download failed: {}", message);
                 }
               });
       connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString &message) {
@@ -298,7 +299,7 @@ bool Clipboard::InitSyncServer() {
           if (type == "text") {
             auto uncompressData = qUncompress(data.toUtf8());
             if (uncompressData.isNull() || uncompressData.isEmpty()) {
-              qDebug() << "Maybe not use qCompress(), add raw data";
+              spdlog::info("Maybe not use qCompress(), add raw data");
               clipboard->setText(data);
             } else {
               clipboard->setText(uncompressData);
@@ -317,7 +318,7 @@ bool Clipboard::InitSyncServer() {
           }
 
         } catch (const std::exception &e) {
-          qDebug() << "websocket received exception." << e.what();
+          spdlog::info("websocket received exception. {}", e.what());
         }
       });
       connect(sync.get(), &SyncServer::syncConnected, [] {});

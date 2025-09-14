@@ -1,5 +1,8 @@
 #include "ClipboardWebSocketClient.h"
 #include <QDebug>
+#include "../utils/Logger.hpp"
+
+#include <magic_enum/magic_enum.hpp>
 
 ClipboardWebSocketClient::ClipboardWebSocketClient(const QUrl &url, QObject *parent)
     : QObject(parent),
@@ -31,7 +34,8 @@ void ClipboardWebSocketClient::connectToServer() {
     }
     QUrl url(serverUrl);
     url.setQuery(QString());   // 清空查询
-    qDebug() << "Connecting to" << url.toString();;
+
+    spdlog::info("Connecting to websocket {}", url.toString());
     webSocket.open(serverUrl);
 }
 
@@ -41,8 +45,8 @@ void ClipboardWebSocketClient::disconnectFromServer() {
 }
 
 void ClipboardWebSocketClient::onConnected() {
-    qDebug() << "WebSocket connected.";
     emit connected();
+    spdlog::info("WebSocket connected.");
 
     // 订阅 /sync/notify（如果服务端需要额外握手可以在这里发送订阅消息）
     // webSocket.sendTextMessage(QStringLiteral("{\"action\":\"subscribe\",\"topic\":\"/sync/notify\"}"));
@@ -66,8 +70,9 @@ void ClipboardWebSocketClient::onBinaryMessageReceived(const QByteArray &message
 }
 
 void ClipboardWebSocketClient::onError(QAbstractSocket::SocketError error) {
-    qWarning() << "WebSocket error:" << error << webSocket.errorString();
     emit errorOccurred(error);
+
+    spdlog::error("WebSocket error:{} {}", magic_enum::enum_name(error), webSocket.errorString());
 
     // 启动重连
     if (!reconnectTimer.isActive())
@@ -75,8 +80,8 @@ void ClipboardWebSocketClient::onError(QAbstractSocket::SocketError error) {
 }
 
 void ClipboardWebSocketClient::onDisconnected() {
-    qDebug() << "WebSocket disconnected.";
     emit disconnected();
+    spdlog::warn("WebSocket disconnected.");
 
     // 尝试重连
     if (!reconnectTimer.isActive())
@@ -84,6 +89,6 @@ void ClipboardWebSocketClient::onDisconnected() {
 }
 
 void ClipboardWebSocketClient::tryReconnect() {
-    qDebug() << "Reconnecting...";
+    spdlog::warn("Reconnecting...");
     connectToServer();
 }

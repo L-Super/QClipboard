@@ -81,11 +81,9 @@ void AutoStartup::SetWinAutoStartup(bool enable) {
     {
       settings.setValue(name, QDir::toNativeSeparators(appPath));
     }
-    qDebug() << "set auto startup finished";
   } else {
     // cancel auto startup
     settings.remove(name);
-    qDebug() << "cancel auto startup";
   }
 }
 

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "../net/ClipboardStruct.h"
+#include "ClipboardStruct.h"
 
 #include <QObject>
 #include <QString>

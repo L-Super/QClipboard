@@ -13,11 +13,6 @@ set(SRC_FILES
         Item.cpp Item.h Item.ui
         AboutDialog.cpp AboutDialog.h AboutDialog.ui
         MainWindow.cpp MainWindow.h MainWindow.ui
-        net/ClipboardApiClient.cpp net/ClipboardApiClient.h
-        net/ClipboardWebSocketClient.cpp
-        net/ClipboardWebSocketClient.h
-        net/SyncServer.cpp
-        net/SyncServer.h
 )
 set(RES_FILES Clipboard.qrc)
 
@@ -52,6 +47,7 @@ add_executable(${PROJECT_NAME}
         ${RES_FILES}
 )
 
+add_subdirectory(net)
 add_subdirectory(utils)
 
 if (WIN32)
@@ -98,9 +94,16 @@ FetchContent_Declare(magic_enum
         GIT_PROGRESS ON
 )
 FetchContent_Declare(json
-        URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
+        URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+)
+FetchContent_Declare(spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog
+        GIT_TAG v1.15.3
+        GIT_SHALLOW ON
+        GIT_PROGRESS ON
+)
 
-FetchContent_MakeAvailable(QHotkey SingleApplication magic_enum json)
+FetchContent_MakeAvailable(QHotkey SingleApplication magic_enum json spdlog)
 
 target_link_libraries(QClipboard
         Qt${QT_VERSION_MAJOR}::Core
@@ -112,6 +115,7 @@ target_link_libraries(QClipboard
         SingleApplication::SingleApplication
         magic_enum::magic_enum
         nlohmann_json::nlohmann_json
+        spdlog::spdlog_header_only
 )
 
 # Deploy the Qt Application

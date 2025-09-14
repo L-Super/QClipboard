@@ -35,8 +35,4 @@ private:
   void UnregisterLinuxProtocol(const QString& protocolName);
   bool IsLinuxProtocolRegistered(const QString& protocolName);
 #endif
-
-private:
-  const QString protocolName_;
-  const QString protocolDescription_;
 };
