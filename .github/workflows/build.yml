@@ -1,10 +1,12 @@
 # This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: platform-building
+name: build-and-package
 
 on:
     push:
         branches: ["main", "feature/sync_server"]
+        tags:
+            - 'v*'
         paths-ignore:
             - "README.md"
             - "README_zh.md"
@@ -22,10 +24,10 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [windows-latest, ubuntu-latest]
+                os: [windows-latest, ubuntu-latest, macos-latest]
                 qt_version: [6.8.0]
                 build_type: [Release]
-
+        
         steps:
             - name: Checkout Source code
               uses: actions/checkout@v4
@@ -54,3 +56,74 @@ jobs:
                 # Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
                 # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
               run: ctest --build-config ${{ matrix.build_type }}
+              
+            - name: Setup Python
+              uses: actions/setup-python@v4
+              with:
+                python-version: '3.x'
+                
+            - name: Install NSIS (Windows)
+              if: runner.os == 'Windows'
+              run: |
+                choco install nsis -y
+                
+            - name: Install AppImage dependencies (Linux)
+              if: runner.os == 'Linux'
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y libfuse2 desktop-file-utils
+                
+            - name: Install create-dmg (macOS)
+              if: runner.os == 'macOS'
+              run: brew install create-dmg
+                
+            - name: Run Packaging Script (Windows)
+              if: runner.os == 'Windows'
+              run: |
+                python scripts/build_nsis_package.py --output-dir ${{github.workspace}}/build --exe-name QClipboard.exe
+                
+            - name: Run Packaging Script (Linux)
+              if: runner.os == 'Linux'
+              run: |
+                python scripts/build_linux_package.py --output-dir ${{github.workspace}}/build --app-name QClipboard --format appimage
+                
+            - name: Run Packaging Script (macOS)
+              if: runner.os == 'macOS'
+              run: |
+                python scripts/build_macos_package.py --output-dir ${{github.workspace}}/build --app-name QClipboard --format dmg
+                
+            - name: Upload Windows Installer as Artifact
+              if: runner.os == 'Windows'
+              uses: actions/upload-artifact@v3
+              with:
+                name: QClipboard-Windows-Installer
+                path: ${{github.workspace}}/build/installer/QClipboard*.exe
+                retention-days: 7
+                
+            - name: Upload Linux AppImage as Artifact
+              if: runner.os == 'Linux'
+              uses: actions/upload-artifact@v3
+              with:
+                name: QClipboard-Linux-AppImage
+                path: ${{github.workspace}}/build/QClipboard*.AppImage
+                retention-days: 7
+                
+            - name: Upload macOS DMG as Artifact
+              if: runner.os == 'macOS'
+              uses: actions/upload-artifact@v3
+              with:
+                name: QClipboard-macOS-DMG
+                path: ${{github.workspace}}/build/QClipboard*.dmg
+                retention-days: 7
+                
+            - name: Create Release and Upload Artifacts
+              if: startsWith(github.ref, 'refs/tags/')
+              uses: softprops/action-gh-release@v1
+              with:
+                files: |
+                  ${{github.workspace}}/build/installer/QClipboard*.exe
+                  ${{github.workspace}}/build/QClipboard*.AppImage
+                  ${{github.workspace}}/build/QClipboard*.dmg
+                draft: false
+                prerelease: false
+                generate_release_notes: true

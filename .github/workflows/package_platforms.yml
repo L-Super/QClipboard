@@ -1,0 +1,104 @@
+# This workflow handles packaging for Linux and macOS platforms
+name: package-linux-macos
+
+on:
+  push:
+    branches: ["main"]
+    tags:
+      - 'v*'
+    paths-ignore:
+      - "README.md"
+      - "README_zh.md"
+      - "LICENSE"
+  pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - "README.md"
+      - "README_zh.md"
+      - "LICENSE"
+  
+  # Manual trigger
+  workflow_dispatch:
+
+jobs:
+  platform-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        qt_version: [6.8.0]
+        build_type: [Release]
+
+    steps:
+      - name: Checkout Source code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{matrix.qt_version}}
+          cache: true
+          cache-key-prefix: 'Qt'
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{ matrix.build_type }}
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest --build-config ${{ matrix.build_type }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+          
+      - name: Install AppImage dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse2 desktop-file-utils
+          
+      - name: Install create-dmg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install create-dmg
+          
+      - name: Run Packaging Script (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          python scripts/build_linux_package.py --output-dir ${{github.workspace}}/build --app-name QClipboard --format appimage
+          
+      - name: Run Packaging Script (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          python scripts/build_macos_package.py --output-dir ${{github.workspace}}/build --app-name QClipboard --format dmg
+          
+      - name: Upload Linux AppImage as Artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v3
+        with:
+          name: QClipboard-Linux-AppImage
+          path: ${{github.workspace}}/build/QClipboard*.AppImage
+          retention-days: 7
+          
+      - name: Upload macOS DMG as Artifact
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v3
+        with:
+          name: QClipboard-macOS-DMG
+          path: ${{github.workspace}}/build/QClipboard*.dmg
+          retention-days: 7
+          
+      - name: Create Release and Upload Artifacts
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            ${{github.workspace}}/build/QClipboard*.AppImage
+            ${{github.workspace}}/build/QClipboard*.dmg
+          draft: false
+          prerelease: false
+          generate_release_notes: true
