@@ -19,7 +19,7 @@
 
 ```bash
 cmake -B build
-cmake --build
+cmake --build build
 ```
 
 ## 配置

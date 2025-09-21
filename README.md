@@ -20,7 +20,7 @@ A cross-platform clipboard management tool based on Qt, supporting multi-device 
 
 ```bash
 cmake -B build
-cmake --build
+cmake --build build
 ```
 
 ## Configuration
