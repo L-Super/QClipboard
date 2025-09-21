@@ -44,7 +44,7 @@ def build_nsis_installer(build_dir, exe_name):
     project_root = Path(__file__).parent.parent
 
     # Create installer directory
-    installer_dir = build_dir / "installer"
+    installer_dir = build_dir.parent / "output"
     installer_dir.mkdir(exist_ok=True)
 
     # Copy executable files and dependencies to installer directory
@@ -54,20 +54,18 @@ def build_nsis_installer(build_dir, exe_name):
     shutil.copy(project_root / "scripts/nsis_package.nsi", installer_dir)
     shutil.copy(project_root / "src/resources/win/icon.ico", installer_dir)
 
-    src_path = build_dir / "src"
-
     # Copy main program
-    shutil.copy2(src_path / exe_name, app_dir / exe_name)
+    shutil.copy2(build_dir / exe_name, app_dir / exe_name)
 
     # Copy dependencies
-    other_deps = list(src_path.glob("*.dll"))
+    other_deps = list(build_dir.glob("*.dll"))
     for dep in other_deps:
         shutil.copy2(dep, app_dir)
 
     # Copy Qt resource files
     qt_resources = ["generic", "iconengines", "imageformats", "networkinformation", "platforms", "styles", "tls"]
     for dir in qt_resources:
-        shutil.copytree(src_path / dir, app_dir / dir, dirs_exist_ok=True)
+        shutil.copytree(build_dir / dir, app_dir / dir, dirs_exist_ok=True)
 
     # Find NSIS compiler
     nsis_compiler = find_nsis_compiler()
@@ -92,7 +90,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Package tool into an installer.')
     parser.add_argument('--output-dir', '-o', type=str, default='build',
-                        help='Build directory (relative to project root)')
+                        help='The binary output directory')
     parser.add_argument('--app-name', '-e', type=str, default='QClipboard.exe',
                         help='Name of the executable file')
 

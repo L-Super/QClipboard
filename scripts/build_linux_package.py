@@ -81,14 +81,13 @@ def create_appimage(build_dir, app_name, project_root):
         return False
 
     # Create AppDir structure
-    app_dir = build_dir / "AppDir"
+    app_dir = build_dir.parent / "AppDir"
     if app_dir.exists():
         shutil.rmtree(app_dir)
     app_dir.mkdir(exist_ok=True)
 
     # Copy executable and dependencies
-    src_path = build_dir / "src"
-    executable_path = src_path / app_name
+    executable_path = build_dir / app_name
 
     if not executable_path.exists():
         print(f"Error: Executable {executable_path} not found")
@@ -259,7 +258,7 @@ def main():
         "-o",
         type=str,
         default="build",
-        help="Build directory (relative to project root)",
+        help="The binary output directory",
     )
     parser.add_argument(
         "--app-name",

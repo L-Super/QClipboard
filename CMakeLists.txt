@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 project(QClipboard
-        VERSION 1.0.4.0 # Set application version. For more details, see src/version.h.in
+        VERSION 1.0.5.0 # Set application version. For more details, see src/version.h.in
 )
 
 set(CMAKE_CXX_STANDARD 20)
