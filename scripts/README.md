@@ -22,7 +22,7 @@ python scripts/build_windows_package.py --output-dir build/src --app-name QClipb
 
 **使用方法：**
 ```bash
-python3 scripts/build_linux_package.py --output-dir build/src --app-name QClipboard ----format appimage
+python3 scripts/build_linux_package.py --output-dir build/src --app-name QClipboard --format appimage
 ```
 
 **前置要求：**
@@ -47,7 +47,7 @@ python3 scripts/build_linux_package.py --output-dir build/src --app-name QClipbo
    ```bash
    # 在项目根目录使用平台脚本
    python scripts/build_windows_package.py --output-dir build/src --app-name QClipboard.exe # Windows
-   python3 scripts/build_linux_package.py --output-dir build/src --app-name QClipboard ----format appimage # Linux
+   python3 scripts/build_linux_package.py --output-dir build/src --app-name QClipboard --format appimage # Linux
    ```
 
 ### CI/CD构建
