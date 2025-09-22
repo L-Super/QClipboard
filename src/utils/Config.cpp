@@ -8,12 +8,17 @@
 
 namespace fs = std::filesystem;
 
+std::string Config::defaultApiUrl{"https://clipboard-api.limuran.top"};
+
 Config::~Config() { save(); }
 
 bool Config::load(const fs::path &file) {
   if (!fs::exists(file)) {
     auto parentPath = file.parent_path();
-    fs::create_directories(parentPath);
+    if (!fs::exists(parentPath)) {
+      fs::create_directories(parentPath);
+    }
+
     // create an empty file
     std::ofstream out(file);
   }
@@ -26,6 +31,7 @@ bool Config::load(const fs::path &file) {
   in.seekg(0, std::ios::end);
   if (in.tellg() == 0) {
     // File is empty, do not parse
+    fillDefaultValues();
     return false;
   }
   in.seekg(0, std::ios::beg);
@@ -83,6 +89,6 @@ std::optional<UserInfo> Config::getUserInfo() const {
 
 void Config::fillDefaultValues() {
   if (!data_.contains("url")) {
-    data_["url"] = "https://clipboard-api.limuran.top";
+    data_["url"] = defaultApiUrl;
   }
 }

@@ -40,6 +40,9 @@ public:
   void setUserInfo(const UserInfo& userInfo);
   std::optional<UserInfo> getUserInfo() const;
 
+public:
+  static std::string defaultApiUrl;
+
 protected:
   void fillDefaultValues();
 

@@ -9,8 +9,8 @@
 #include "QHotkey"
 #include "net/SyncServer.h"
 #include "utils/Config.h"
-#include "utils/Util.h"
 #include "utils/Logger.hpp"
+#include "utils/Util.h"
 
 #include <QAction>
 #include <QApplication>
@@ -269,7 +269,18 @@ bool Clipboard::InitSyncServer() {
         else
           qDebug() << "login failed." << message;
       });
-      connect(sync.get(), &SyncServer::uploadFinished, [] {});
+      connect(sync.get(), &SyncServer::uploadFinished, [](bool success, const QString &message) {
+        if (success) {
+          const auto doc = QJsonDocument::fromJson(message.toUtf8());
+          const auto obj = doc.object();
+          QString id = obj.value("id").toString();
+          QString created = obj.value("created_at").toString();
+
+          spdlog::info("upload successful. id: {} created_at: {}", id, created);
+        }else {
+          spdlog::error("upload failed. {}", message);
+        }
+      });
       connect(sync.get(), &SyncServer::imageDownloadFinished,
               [this](bool success, const QImage &image, const QString &message) {
                 if (success) {
@@ -308,7 +319,7 @@ bool Clipboard::InitSyncServer() {
           } else if (type == "image") {
             // 当接收到image类型时，data字段为图片的URL
             const auto &imageUrl = data;
-            qDebug() << "received image url:" << imageUrl;
+            spdlog::info("received image url:{}", imageUrl);
 
             // 调用下载逻辑
             if (sync) {
@@ -327,6 +338,7 @@ bool Clipboard::InitSyncServer() {
       return true;
     }
   }
+  spdlog::warn("user info not exist");
   return false;
 }
 

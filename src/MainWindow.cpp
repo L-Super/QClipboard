@@ -14,6 +14,7 @@
 #include "net/SyncServer.h"
 #include "utils/AutoStartup.h"
 #include "utils/Config.h"
+#include "utils/Logger.hpp"
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow), buttonGroup(new QButtonGroup(this)) {
   ui->setupUi(this);
@@ -88,11 +89,12 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::keySequenceChanged, this,
   //         [this](const QKeySequence &keySequence) { qDebug() << "keySequenceChanged" << keySequence; });
   connect(ui->loginButton, &QPushButton::clicked, this, [this]() {
+    spdlog::info("login button clicked");
     if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
       QDesktopServices::openUrl(QUrl(QString::fromStdString(url.value())));
     } else {
       // open default url
-      QDesktopServices::openUrl(QUrl("https://clipboard-api.limuran.top"));
+      QDesktopServices::openUrl(QUrl(QString::fromStdString(Config::defaultApiUrl)));
     }
   });
 }
