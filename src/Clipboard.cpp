@@ -40,7 +40,7 @@
 //  2. macOS适配
 //  3. 点击item时，自动在光标处粘贴
 
-Clipboard::Clipboard(QWidget *parent)
+Clipboard::Clipboard(QWidget* parent)
     : QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)), trayMenu(new QMenu()),
       hotkey(new QHotkey(this)), listWidget(new QListWidget(this)), homeWidget(new MainWindow()) {
   setWindowOpacity(0.9);
@@ -75,8 +75,8 @@ Clipboard::Clipboard(QWidget *parent)
   qApp->installEventFilter(this);
 
   connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
-  connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *listWidgetItem) {
-    Item *item = qobject_cast<Item *>(listWidget->itemWidget(listWidgetItem));
+  connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem* listWidgetItem) {
+    Item* item = qobject_cast<Item*>(listWidget->itemWidget(listWidgetItem));
 
     switch (item->GetMetaType()) {
     case QMetaType::QString: {
@@ -114,7 +114,7 @@ void Clipboard::DataChanged() {
   QByteArray hashValue;
   ClipboardData clipData;
 
-  const QMimeData *mimeData = clipboard->mimeData();
+  const QMimeData* mimeData = clipboard->mimeData();
   qDebug() << "mime data type:" << mimeData->formats();
 
   if (mimeData->hasText()) {
@@ -124,7 +124,8 @@ void Clipboard::DataChanged() {
 
     clipData.type = ClipboardDataType::text;
     clipData.data = latestText.toUtf8();
-  } else if (mimeData->hasImage()) {
+  }
+  else if (mimeData->hasImage()) {
     // 将图片数据转为QImage
     auto image = qvariant_cast<QImage>(mimeData->imageData());
     qDebug() << "image format" << image.format();
@@ -137,7 +138,8 @@ void Clipboard::DataChanged() {
 
     clipData.type = ClipboardDataType::image;
     clipData.data = ba;
-  } else if (mimeData->hasUrls()) {
+  }
+  else if (mimeData->hasUrls()) {
     qDebug() << "has urls" << mimeData->urls();
   }
 
@@ -161,8 +163,8 @@ void Clipboard::ClearItems() {
   hashItems.clear();
 }
 
-void Clipboard::RemoveItem(QListWidgetItem *item) {
-  Item *widget = qobject_cast<Item *>(listWidget->itemWidget(item));
+void Clipboard::RemoveItem(QListWidgetItem* item) {
+  Item* widget = qobject_cast<Item*>(listWidget->itemWidget(item));
   auto value = widget->GetHashValue();
   hashItems.remove(value);
   hashItemMap.remove(value);
@@ -209,7 +211,8 @@ void Clipboard::CreateTrayAction() {
   connect(homeAction, &QAction::triggered, this, [this] {
     if (sync) {
       homeWidget->SetOnlineStatus(sync->isLoggedIn());
-    } else {
+    }
+    else {
       homeWidget->SetOnlineStatus(false);
     }
     homeWidget->show();
@@ -225,7 +228,7 @@ void Clipboard::CreateTrayAction() {
 }
 
 void Clipboard::InitShortcut() {
-  Config &config = Config::instance();
+  Config& config = Config::instance();
   // 从配置文件读取快捷键
   QString shortcutStr = "Alt+V"; // 默认快捷键
   // 将快捷键在配置文件中存为一个字符串，例如 "Alt+V" 或 "Ctrl+Shift+V"
@@ -264,13 +267,13 @@ bool Clipboard::InitSyncServer() {
     }
 
     connect(sync.get(), &SyncServer::registrationFinished, [] {});
-    connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token &token, const QString &message) {
+    connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token& token, const QString& message) {
       if (success)
         qDebug() << "login successful";
       else
         qDebug() << "login failed." << message;
     });
-    connect(sync.get(), &SyncServer::uploadFinished, [](bool success, const QString &message) {
+    connect(sync.get(), &SyncServer::uploadFinished, [](bool success, const QString& message) {
       if (success) {
         const auto doc = QJsonDocument::fromJson(message.toUtf8());
         const auto obj = doc.object();
@@ -278,20 +281,22 @@ bool Clipboard::InitSyncServer() {
         QString created = obj.value("created_at").toString();
 
         spdlog::info("Upload data successful, id: {} created_at: {}", id, created);
-      } else {
+      }
+      else {
         spdlog::error("Upload data failed. {}", message);
       }
     });
     connect(sync.get(), &SyncServer::imageDownloadFinished,
-            [this](bool success, const QImage &image, const QString &message) {
+            [this](bool success, const QImage& image, const QString& message) {
               if (success) {
                 spdlog::info("Image downloaded successfully, updating clipboard");
                 clipboard->setImage(image);
-              } else {
+              }
+              else {
                 spdlog::warn("Image download failed: {}", message);
               }
             });
-    connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString &message) {
+    connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString& message) {
       // json:
       //{
       //  "action":"update",
@@ -313,19 +318,21 @@ bool Clipboard::InitSyncServer() {
           if (!data.isEmpty()) {
             clipboard->setText(data);
           }
-        } else if (type == "image") {
+        }
+        else if (type == "image") {
           // 当接收到image类型时，data字段为图片的URL
-          const auto &imageUrl = data;
+          const auto& imageUrl = data;
           spdlog::info("Received image url:{}", imageUrl);
 
           // 调用下载逻辑
           if (sync) {
             sync->downloadImage(imageUrl);
           }
-        } else if (type == "file") {
         }
-
-      } catch (const std::exception &e) {
+        else if (type == "file") {
+        }
+      }
+      catch (const std::exception& e) {
         spdlog::info("Websocket received data has exception. {}", e.what());
       }
     });
@@ -349,7 +356,7 @@ void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   }
 }
 
-void Clipboard::AddItem(const QVariant &data, const QByteArray &hash) {
+void Clipboard::AddItem(const QVariant& data, const QByteArray& hash) {
   auto listItem = new QListWidgetItem();
   listItem->setSizeHint(QSize(300, 80));
   auto item = new Item(this);
@@ -367,7 +374,7 @@ void Clipboard::AddItem(const QVariant &data, const QByteArray &hash) {
   hashItemMap.insert(hash, listItem);
 }
 
-void Clipboard::MoveItemToTop(const QByteArray &hashValue) {
+void Clipboard::MoveItemToTop(const QByteArray& hashValue) {
   auto listItem = hashItemMap.value(hashValue);
   if (!listItem)
     return;
@@ -384,20 +391,21 @@ void Clipboard::MoveItemToTop(const QByteArray &hashValue) {
   //   hashItemMap.insert(hashValue, listItem);
 }
 
-void Clipboard::closeEvent(QCloseEvent *event) {
+void Clipboard::closeEvent(QCloseEvent* event) {
   hide();
   event->ignore();
 }
 
-bool Clipboard::eventFilter(QObject *obj, QEvent *event) {
+bool Clipboard::eventFilter(QObject* obj, QEvent* event) {
 
   if (event->type() == QEvent::WindowDeactivate) {
     // 窗口停用
     hide();
     return true;
-  } else if (event->type() == QEvent::KeyPress) {
+  }
+  else if (event->type() == QEvent::KeyPress) {
     // 按ESC键时隐藏窗口
-    auto *keyEvent = dynamic_cast<QKeyEvent *>(event);
+    auto* keyEvent = dynamic_cast<QKeyEvent*>(event);
     if (keyEvent->key() == Qt::Key_Escape) {
       hide();
       return true;

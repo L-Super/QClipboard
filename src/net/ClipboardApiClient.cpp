@@ -1,6 +1,6 @@
 #include "ClipboardApiClient.h"
-#include "magic_enum/magic_enum.hpp"
 #include "../utils/Logger.hpp"
+#include "magic_enum/magic_enum.hpp"
 
 #include <QBuffer>
 #include <QHttpMultiPart>
@@ -9,16 +9,16 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
-ClipboardApiClient::ClipboardApiClient(const QUrl &baseUrl, QObject *parent)
+ClipboardApiClient::ClipboardApiClient(const QUrl& baseUrl, QObject* parent)
     : QObject(parent), manager(new QNetworkAccessManager(this)), baseUrl(baseUrl) {
   connect(manager, &QNetworkAccessManager::finished, this, &ClipboardApiClient::onNetworkReply);
 }
 
 ClipboardApiClient::~ClipboardApiClient() = default;
 
-void ClipboardApiClient::setUrl(const QUrl &url) { baseUrl = url; }
+void ClipboardApiClient::setUrl(const QUrl& url) { baseUrl = url; }
 
-void ClipboardApiClient::registerUser(const QString &email, const QString &password) {
+void ClipboardApiClient::registerUser(const QString& email, const QString& password) {
   QUrl url = baseUrl.resolved(QUrl("/auth/register"));
   QNetworkRequest req(url);
   req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -26,11 +26,11 @@ void ClipboardApiClient::registerUser(const QString &email, const QString &passw
   QJsonObject body;
   body["email"] = email;
   body["password"] = password;
-  QNetworkReply *reply = manager->post(req, QJsonDocument(body).toJson());
+  QNetworkReply* reply = manager->post(req, QJsonDocument(body).toJson());
   replyMap.insert(reply, Endpoint::Register);
 }
 
-void ClipboardApiClient::login(const User &user) {
+void ClipboardApiClient::login(const User& user) {
   QUrl url = baseUrl.resolved(QUrl("/auth/login"));
   QNetworkRequest req(url);
   req.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -43,25 +43,25 @@ void ClipboardApiClient::login(const User &user) {
   auto deviceType = magic_enum::enum_name(user.deviceType);
   body["device_type"] = QString::fromStdString(deviceType.data());
 
-  QNetworkReply *reply = manager->post(req, QJsonDocument(body).toJson());
+  QNetworkReply* reply = manager->post(req, QJsonDocument(body).toJson());
   replyMap.insert(reply, Endpoint::Login);
 }
 
-void ClipboardApiClient::verifyToken(const QString &authToken) {
+void ClipboardApiClient::verifyToken(const QString& authToken) {
   QUrl url = baseUrl.resolved(QUrl("/auth/verify-token"));
   QNetworkRequest req(url);
   req.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
 
-  QNetworkReply *reply = manager->get(req);
+  QNetworkReply* reply = manager->get(req);
   replyMap.insert(reply, Endpoint::VerifyToken);
 }
 
-void ClipboardApiClient::uploadClipboard(const ClipboardData &data, const QString &authToken) {
+void ClipboardApiClient::uploadClipboard(const ClipboardData& data, const QString& authToken) {
   QUrl url = baseUrl.resolved(QUrl("/clipboard"));
   QNetworkRequest req(url);
   req.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
 
-  QHttpMultiPart *multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+  QHttpMultiPart* multiPart = new QHttpMultiPart(QHttpMultiPart::FormDataType);
 
   QHttpPart typePart;
   typePart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"type\"");
@@ -74,7 +74,8 @@ void ClipboardApiClient::uploadClipboard(const ClipboardData &data, const QStrin
 
     multiPart->append(typePart);
     multiPart->append(dataPart);
-  } else {
+  }
+  else {
     auto type = QString::fromStdString(std::string(magic_enum::enum_name(data.type)));
 
     typePart.setBody(type.toUtf8()); // image 或 "file"
@@ -94,22 +95,22 @@ void ClipboardApiClient::uploadClipboard(const ClipboardData &data, const QStrin
     multiPart->append(filePart);
   }
 
-  QNetworkReply *reply = manager->post(req, multiPart);
+  QNetworkReply* reply = manager->post(req, multiPart);
   multiPart->setParent(reply); // 自动释放
   replyMap.insert(reply, Endpoint::Upload);
 }
 
-void ClipboardApiClient::downloadImage(const QString &imageUrl, const QString &authToken) {
+void ClipboardApiClient::downloadImage(const QString& imageUrl, const QString& authToken) {
   QUrl url = baseUrl.resolved(imageUrl);
 
   QNetworkRequest req(url);
   req.setRawHeader("Authorization", QString("Bearer %1").arg(authToken).toUtf8());
 
-  QNetworkReply *reply = manager->get(req);
+  QNetworkReply* reply = manager->get(req);
   replyMap.insert(reply, Endpoint::DownloadImage);
 }
 
-void ClipboardApiClient::onNetworkReply(QNetworkReply *reply) {
+void ClipboardApiClient::onNetworkReply(QNetworkReply* reply) {
   Endpoint ep = replyMap.take(reply);
 
   if (reply->error() != QNetworkReply::NoError) {
@@ -148,7 +149,7 @@ void ClipboardApiClient::onNetworkReply(QNetworkReply *reply) {
   reply->deleteLater();
 }
 
-void ClipboardApiClient::handleJsonResponse(QNetworkReply *reply, Endpoint ep) {
+void ClipboardApiClient::handleJsonResponse(QNetworkReply* reply, Endpoint ep) {
   const auto bytes = reply->readAll();
   const auto doc = QJsonDocument::fromJson(bytes);
   const auto obj = doc.object();
@@ -178,13 +179,14 @@ void ClipboardApiClient::handleJsonResponse(QNetworkReply *reply, Endpoint ep) {
   }
 }
 
-void ClipboardApiClient::handleImageDownload(QNetworkReply *reply) {
+void ClipboardApiClient::handleImageDownload(QNetworkReply* reply) {
   const auto bytes = reply->readAll();
   QImage image = QImage::fromData(bytes);
-  
+
   if (image.isNull()) {
     emit imageDownloadFinished(false, QImage(), "Failed to load image data");
-  } else {
+  }
+  else {
     emit imageDownloadFinished(true, image, "");
   }
 }

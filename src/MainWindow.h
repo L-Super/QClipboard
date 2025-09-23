@@ -18,18 +18,18 @@ class MainWindow : public QWidget {
   Q_OBJECT
 
 public:
-  explicit MainWindow(QWidget *parent = nullptr);
+  explicit MainWindow(QWidget* parent = nullptr);
   ~MainWindow() override;
 
-  void SetHotkey(QHotkey *hotkey);
+  void SetHotkey(QHotkey* hotkey);
   void SetOnlineStatus(bool online);
 
 protected:
-  void showEvent(QShowEvent *event) override;
-  void closeEvent(QCloseEvent *event) override;
+  void showEvent(QShowEvent* event) override;
+  void closeEvent(QCloseEvent* event) override;
 
 private:
-  Ui::MainWindow *ui;
+  Ui::MainWindow* ui;
   QButtonGroup* buttonGroup{};
   QHotkey* hotkey{};
 };

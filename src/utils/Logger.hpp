@@ -18,19 +18,21 @@
 #include <QDebug>
 #include <QString>
 
-template <> struct fmt::formatter<QString> : formatter<string_view> {
-  auto format(const QString &str, format_context &ctx) const -> format_context::iterator {
+template<>
+struct fmt::formatter<QString> : formatter<string_view> {
+  auto format(const QString& str, format_context& ctx) const -> format_context::iterator {
     return formatter<string_view>::format(str.toStdString(), ctx);
   }
 };
 
-template <> struct fmt::formatter<QByteArray> : formatter<string_view> {
-  auto format(const QByteArray &str, format_context &ctx) const -> format_context::iterator {
+template<>
+struct fmt::formatter<QByteArray> : formatter<string_view> {
+  auto format(const QByteArray& str, format_context& ctx) const -> format_context::iterator {
     return formatter<string_view>::format(str.toStdString(), ctx);
   }
 };
 
-static void initLogging(const std::string &&filePath) {
+static void initLogging(const std::string&& filePath) {
   try {
     auto maxSize = 1024 * 1024 * 5; // 5MB
     auto maxFiles = 3;
@@ -46,7 +48,8 @@ static void initLogging(const std::string &&filePath) {
     spdlog::set_pattern(format);
     using namespace std::chrono_literals;
     spdlog::flush_every(5s);
-  } catch (const spdlog::spdlog_ex &e) {
+  }
+  catch (const spdlog::spdlog_ex& e) {
     qWarning() << "Log init failed, " << e.what();
   }
 }

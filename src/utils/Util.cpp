@@ -17,7 +17,7 @@ QString generateDeviceId() {
 
 QString macAddress() {
   QString result;
-  foreach (const QNetworkInterface &interface, QNetworkInterface::allInterfaces()) {
+  foreach (const QNetworkInterface& interface, QNetworkInterface::allInterfaces()) {
     if (!(interface.flags() & QNetworkInterface::IsLoopBack)) {
       result = interface.hardwareAddress();
       break;

@@ -5,7 +5,6 @@
 #pragma once
 #include <QString>
 
-
 namespace utils {
 QString generateDeviceId();
 

@@ -7,7 +7,7 @@
 #include <QTimer>
 #include <QUrlQuery>
 
-SyncServer::SyncServer(const QUrl &apiBaseUrl, QObject *parent)
+SyncServer::SyncServer(const QUrl& apiBaseUrl, QObject* parent)
     : QObject(parent), apiClient(new ClipboardApiClient(apiBaseUrl, this)) {
   setUrl(apiBaseUrl);
   // 绑定 HTTP 客户端信号
@@ -17,11 +17,9 @@ SyncServer::SyncServer(const QUrl &apiBaseUrl, QObject *parent)
   connect(apiClient, &ClipboardApiClient::imageDownloadFinished, this, &SyncServer::imageDownloadFinished);
 }
 
-SyncServer::~SyncServer() {
-  stopSync();
-}
+SyncServer::~SyncServer() { stopSync(); }
 
-void SyncServer::setUrl(const QUrl &apiBaseUrl) {
+void SyncServer::setUrl(const QUrl& apiBaseUrl) {
   this->apiBaseUrl = apiBaseUrl;
   apiClient->setUrl(apiBaseUrl);
 
@@ -31,7 +29,7 @@ void SyncServer::setUrl(const QUrl &apiBaseUrl) {
   wsBaseUrl.setPath("/sync/notify");
 }
 
-bool SyncServer::setToken(const QString &token) {
+bool SyncServer::setToken(const QString& token) {
   if (verifyTokenValid(token)) {
     authToken = token;
     handleLoginFinished(true, {.accessToken = token, .refreshToken = ""}, "");
@@ -44,13 +42,13 @@ bool SyncServer::setToken(const QString &token) {
 
 bool SyncServer::isLoggedIn() const { return isLoginSuccessful; }
 
-void SyncServer::registerUser(const QString &username, const QString &password) {
+void SyncServer::registerUser(const QString& username, const QString& password) {
   apiClient->registerUser(username, password);
 }
 
-void SyncServer::login(const User &user) { apiClient->login(user); }
+void SyncServer::login(const User& user) { apiClient->login(user); }
 
-void SyncServer::uploadClipboardData(const ClipboardData &data) {
+void SyncServer::uploadClipboardData(const ClipboardData& data) {
   if (authToken.isEmpty()) {
     emit uploadFinished(false, "Not authenticated");
     return;
@@ -58,7 +56,7 @@ void SyncServer::uploadClipboardData(const ClipboardData &data) {
   apiClient->uploadClipboard(data, authToken);
 }
 
-void SyncServer::downloadImage(const QString &imageUrl) {
+void SyncServer::downloadImage(const QString& imageUrl) {
   if (authToken.isEmpty()) {
     emit imageDownloadFinished(false, QImage(), "Not authenticated");
     return;
@@ -78,7 +76,7 @@ void SyncServer::stopSync() {
   }
 }
 
-void SyncServer::handleLoginFinished(bool success, const Token &token, const QString &message) {
+void SyncServer::handleLoginFinished(bool success, const Token& token, const QString& message) {
   // 先把登录结果透传给调用方
   emit loginFinished(success, token, message);
   if (!success) {
@@ -114,7 +112,7 @@ void SyncServer::handleLoginFinished(bool success, const Token &token, const QSt
   wsClient->connectToServer();
 }
 
-bool SyncServer::verifyTokenValid(const QString &token) {
+bool SyncServer::verifyTokenValid(const QString& token) {
   // 发起 /auth/verify-token 请求，等待结果（带超时）
   QEventLoop loop;
   QTimer timer;
@@ -122,7 +120,7 @@ bool SyncServer::verifyTokenValid(const QString &token) {
   bool ok = false;
   QString msg;
 
-  auto onFinished = [&](bool success, const QString &message) {
+  auto onFinished = [&](bool success, const QString& message) {
     ok = success;
     msg = message;
     if (loop.isRunning())

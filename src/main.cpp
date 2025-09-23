@@ -1,9 +1,9 @@
 #include "Clipboard.h"
 #include "SingleApplication"
 #include "net/ProtocolHandler.h"
+#include "net/ProtocolRegistry.h"
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
-#include "net/ProtocolRegistry.h"
 #include "version.h"
 
 #include <QApplication>
@@ -12,7 +12,7 @@
 #include <QStandardPaths>
 #include <QUrl>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   SingleApplication a(argc, argv, true);
   auto logFilePath = QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/logs/app.log";
   initLogging(logFilePath.toStdString());
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
   QObject::connect(&a, &SingleApplication::instanceStarted, &c, &Clipboard::show);
   // 连接协议处理器的信号到剪贴板对象
   QObject::connect(&protocolHandler, &ProtocolHandler::loginDataReceived, &c,
-                   [&c](const UserInfo &userInfo, const QVariantMap &additionalData) {
+                   [&c](const UserInfo& userInfo, const QVariantMap& additionalData) {
                      spdlog::info("Data received from custom protocol");
                      qDebug() << "Additional data:" << additionalData;
 
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
                    });
 
   QObject::connect(&protocolHandler, &ProtocolHandler::errorOccurred,
-                   [](const QString &errorMessage) { spdlog::info("Protocol error:{}", errorMessage); });
+                   [](const QString& errorMessage) { spdlog::info("Protocol error:{}", errorMessage); });
 
   if (!protocolUrl.isEmpty()) {
     protocolHandler.HandleProtocolUrl(protocolUrl.toUtf8());

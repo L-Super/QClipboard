@@ -9,7 +9,7 @@
 #include <QPixmap>
 #include <QVariant>
 
-Item::Item(QWidget *parent) : QWidget(parent), ui(new Ui::Item) {
+Item::Item(QWidget* parent) : QWidget(parent), ui(new Ui::Item) {
   ui->setupUi(this);
 
   ui->label->setWordWrap(true);
@@ -17,12 +17,10 @@ Item::Item(QWidget *parent) : QWidget(parent), ui(new Ui::Item) {
   ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
   //	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
 
-  connect(ui->deletePushButton, &QPushButton::clicked, this,
-          &Item::DeleteButtonClicked);
+  connect(ui->deletePushButton, &QPushButton::clicked, this, &Item::DeleteButtonClicked);
 }
 
-Item::Item(const QString &text, QWidget *parent)
-    : QWidget(parent), ui(new Ui::Item) {
+Item::Item(const QString& text, QWidget* parent) : QWidget(parent), ui(new Ui::Item) {
   ui->setupUi(this);
 
   ui->label->setWordWrap(true);
@@ -32,23 +30,24 @@ Item::Item(const QString &text, QWidget *parent)
 
   ui->label->setText(text);
 
-  connect(ui->deletePushButton, &QPushButton::clicked, this,
-          &Item::DeleteButtonClicked);
+  connect(ui->deletePushButton, &QPushButton::clicked, this, &Item::DeleteButtonClicked);
 }
 
 Item::~Item() { delete ui; }
 
-void Item::SetData(const QVariant &data, const QByteArray &hash) {
+void Item::SetData(const QVariant& data, const QByteArray& hash) {
   metaType = data.userType();
 
   if (metaType == QMetaType::QString) {
     SetText(data.toString());
-  } else if (metaType == QMetaType::QPixmap) {
+  }
+  else if (metaType == QMetaType::QPixmap) {
     qDebug() << "Item add  Pixmap";
 
     auto pixmap = data.value<QPixmap>();
     ui->label->setPixmap(pixmap);
-  } else if (metaType == QMetaType::QImage) {
+  }
+  else if (metaType == QMetaType::QImage) {
     latestImage = data.value<QImage>();
     ui->label->setPixmap(QPixmap::fromImage(latestImage));
   }
@@ -56,21 +55,15 @@ void Item::SetData(const QVariant &data, const QByteArray &hash) {
   hashValue = hash;
 }
 
-void Item::SetText(const QString &text) { ui->label->setText(text); }
+void Item::SetText(const QString& text) { ui->label->setText(text); }
 
 QString Item::GetText() const { return ui->label->text(); }
 
-void Item::SetListWidgetItem(QListWidgetItem *listWidgetItem) {
-  listItem = listWidgetItem;
-}
+void Item::SetListWidgetItem(QListWidgetItem* listWidgetItem) { listItem = listWidgetItem; }
 
-QListWidgetItem *Item::GetListWidgetItem() const {
-  return listItem == nullptr ? nullptr : listItem;
-}
+QListWidgetItem* Item::GetListWidgetItem() const { return listItem == nullptr ? nullptr : listItem; }
 
-void Item::DeleteButtonClicked() {
-  emit deleteButtonClickedSignal(GetListWidgetItem());
-}
+void Item::DeleteButtonClicked() { emit deleteButtonClickedSignal(GetListWidgetItem()); }
 
 QImage Item::GetImage() const { return latestImage; }
 

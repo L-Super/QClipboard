@@ -4,8 +4,8 @@
 
 #include "ProtocolHandler.h"
 
-#include "ClipboardStruct.h"
 #include "../utils/Logger.hpp"
+#include "ClipboardStruct.h"
 
 #include <QDebug>
 #include <QRegularExpression>
@@ -17,9 +17,9 @@ const QString PROTOCOL_SCHEME = "qclipboard";
 const QString LOGIN_ACTION = "login";
 } // namespace
 
-ProtocolHandler::ProtocolHandler(QObject *parent) : QObject(parent) {}
+ProtocolHandler::ProtocolHandler(QObject* parent) : QObject(parent) {}
 
-void ProtocolHandler::HandleProtocolUrl(const QString &url) {
+void ProtocolHandler::HandleProtocolUrl(const QString& url) {
   spdlog::info("Handling protocol URL:{}", url);
 
   if (!ValidateUrl(url)) {
@@ -54,7 +54,8 @@ void ProtocolHandler::HandleProtocolUrl(const QString &url) {
       return;
     }
 
-    UserInfo userInfo{.email = email.toStdString(), .token = token.toStdString(), .device_name = deviceName.toStdString()};
+    UserInfo userInfo{
+        .email = email.toStdString(), .token = token.toStdString(), .device_name = deviceName.toStdString()};
 
     // 移除敏感信息，只保留其他参数
     QVariantMap additionalData = parameters;
@@ -63,31 +64,33 @@ void ProtocolHandler::HandleProtocolUrl(const QString &url) {
     additionalData.remove("device_name");
 
     emit loginDataReceived(userInfo, additionalData);
-  } else {
+  }
+  else {
     emit errorOccurred(QString("Unknown action: %1").arg(url));
   }
 }
 
-QVariantMap ProtocolHandler::ParseUrlParameters(const QString &url) {
+QVariantMap ProtocolHandler::ParseUrlParameters(const QString& url) {
   QVariantMap parameters;
 
   try {
     QUrlQuery query(QUrl{url});
 
     // 解析查询参数
-    for (const auto &item : query.queryItems()) {
+    for (const auto& item : query.queryItems()) {
       QString key = DecodeUrlParameter(item.first);
       QString value = DecodeUrlParameter(item.second);
       parameters.insert(key, value);
     }
-  } catch (const std::exception &e) {
+  }
+  catch (const std::exception& e) {
     qDebug() << "Error parsing URL:" << e.what();
   }
 
   return parameters;
 }
 
-bool ProtocolHandler::ValidateUrl(const QString &url) {
+bool ProtocolHandler::ValidateUrl(const QString& url) {
   // 检查URL是否以正确的协议开头
   if (!url.startsWith(PROTOCOL_SCHEME + "://")) {
     return false;
@@ -98,10 +101,10 @@ bool ProtocolHandler::ValidateUrl(const QString &url) {
   return qurl.isValid() && qurl.scheme() == PROTOCOL_SCHEME;
 }
 
-QString ProtocolHandler::DecodeUrlParameter(const QString &parameter) {
+QString ProtocolHandler::DecodeUrlParameter(const QString& parameter) {
   return QUrl::fromPercentEncoding(parameter.toUtf8());
 }
 
-QString ProtocolHandler::EncodeUrlParameter(const QString &parameter) {
+QString ProtocolHandler::EncodeUrlParameter(const QString& parameter) {
   return QString::fromUtf8(QUrl::toPercentEncoding(parameter));
 }

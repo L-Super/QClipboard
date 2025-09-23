@@ -12,16 +12,16 @@ class ProtocolRegistry : public QObject {
 public:
   ProtocolRegistry();
   ~ProtocolRegistry() override = default;
-  
+
   // 注册自定义协议
   void RegisterProtocol(const QString& protocolName = "qclipboard");
-  
+
   // 取消注册自定义协议
   void UnregisterProtocol(const QString& protocolName = "qclipboard");
-  
+
   // 检查协议是否已注册
   bool IsProtocolRegistered(const QString& protocolName = "qclipboard");
-  
+
   // 获取协议URL
   QString GetProtocolUrl(const QString& protocolName = "qclipboard");
 

@@ -3,3 +3,21 @@
 Language: Cpp
 BasedOnStyle: LLVM
 ColumnLimit: 120
+BreakTemplateDeclarations: Yes
+SpaceAfterTemplateKeyword: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterUnion: false
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: true
+PointerAlignment: Left
+ReferenceAlignment: Left

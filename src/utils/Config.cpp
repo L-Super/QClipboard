@@ -13,7 +13,7 @@ std::string Config::defaultApiUrl{"https://clipboard-api.limuran.top"};
 
 Config::~Config() { save(); }
 
-std::expected<bool, std::string> Config::load(const fs::path &file) {
+std::expected<bool, std::string> Config::load(const fs::path& file) {
   if (!fs::exists(file)) {
     auto parentPath = file.parent_path();
     if (!fs::exists(parentPath)) {
@@ -40,7 +40,8 @@ std::expected<bool, std::string> Config::load(const fs::path &file) {
   try {
     data_ = nlohmann::json::parse(in);
     fillDefaultValues();
-  } catch (const std::exception &e) {
+  }
+  catch (const std::exception& e) {
     spdlog::error("Config json parse failed. {}", e.what());
     return std::unexpected(e.what());
   }
@@ -57,7 +58,7 @@ bool Config::save() const {
   return true;
 }
 
-void Config::setServerConfig(const ServerConfig &server) { data_["server"] = server; }
+void Config::setServerConfig(const ServerConfig& server) { data_["server"] = server; }
 
 std::optional<ServerConfig> Config::getServerConfig() const {
   if (!data_.contains("server"))
@@ -66,14 +67,15 @@ std::optional<ServerConfig> Config::getServerConfig() const {
   try {
     ServerConfig server = data_["server"];
     return std::make_optional(server);
-  } catch (const std::exception &e) {
+  }
+  catch (const std::exception& e) {
     spdlog::error("Server config not found. {}", e.what());
   }
 
   return std::nullopt;
 }
 
-void Config::setUserInfo(const UserInfo &userInfo) { data_["user_info"] = userInfo; }
+void Config::setUserInfo(const UserInfo& userInfo) { data_["user_info"] = userInfo; }
 
 std::optional<UserInfo> Config::getUserInfo() const {
   if (!data_.contains("user_info"))
@@ -82,7 +84,8 @@ std::optional<UserInfo> Config::getUserInfo() const {
   try {
     UserInfo userInfo = data_["user_info"];
     return std::make_optional(userInfo);
-  } catch (const std::exception &e) {
+  }
+  catch (const std::exception& e) {
     spdlog::error("User info not found. {}", e.what());
   }
   return std::nullopt;

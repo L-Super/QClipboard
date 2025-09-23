@@ -17,7 +17,7 @@
 
 ProtocolRegistry::ProtocolRegistry() {}
 
-void ProtocolRegistry::RegisterProtocol(const QString &protocolName) {
+void ProtocolRegistry::RegisterProtocol(const QString& protocolName) {
 #if defined(Q_OS_WIN)
   RegisterWinProtocol(protocolName);
 #elif defined(Q_OS_LINUX)
@@ -25,7 +25,7 @@ void ProtocolRegistry::RegisterProtocol(const QString &protocolName) {
 #endif
 }
 
-void ProtocolRegistry::UnregisterProtocol(const QString &protocolName) {
+void ProtocolRegistry::UnregisterProtocol(const QString& protocolName) {
 #if defined(Q_OS_WIN)
   UnregisterWinProtocol(protocolName);
 #elif defined(Q_OS_LINUX)
@@ -33,7 +33,7 @@ void ProtocolRegistry::UnregisterProtocol(const QString &protocolName) {
 #endif
 }
 
-bool ProtocolRegistry::IsProtocolRegistered(const QString &protocolName) {
+bool ProtocolRegistry::IsProtocolRegistered(const QString& protocolName) {
 #if defined(Q_OS_WIN)
   return IsWinProtocolRegistered(protocolName);
 #elif defined(Q_OS_LINUX)
@@ -42,10 +42,10 @@ bool ProtocolRegistry::IsProtocolRegistered(const QString &protocolName) {
   return false;
 }
 
-QString ProtocolRegistry::GetProtocolUrl(const QString &protocolName) { return QString("%1://").arg(protocolName); }
+QString ProtocolRegistry::GetProtocolUrl(const QString& protocolName) { return QString("%1://").arg(protocolName); }
 
 #if defined(Q_OS_WIN)
-void ProtocolRegistry::RegisterWinProtocol(const QString &protocolName) {
+void ProtocolRegistry::RegisterWinProtocol(const QString& protocolName) {
   QSettings settings("HKEY_CURRENT_USER\\Software\\Classes", QSettings::Format::NativeFormat);
 
   // 注册协议
@@ -68,7 +68,7 @@ void ProtocolRegistry::RegisterWinProtocol(const QString &protocolName) {
   spdlog::info("Windows protocol registered: {}", protocolName);
 }
 
-void ProtocolRegistry::UnregisterWinProtocol(const QString &protocolName) {
+void ProtocolRegistry::UnregisterWinProtocol(const QString& protocolName) {
   QSettings settings("HKEY_CURRENT_USER\\Software\\Classes", QSettings::Format::NativeFormat);
 
   // 删除协议注册
@@ -77,7 +77,7 @@ void ProtocolRegistry::UnregisterWinProtocol(const QString &protocolName) {
   spdlog::info("Windows protocol unregistered: {}", protocolName);
 }
 
-bool ProtocolRegistry::IsWinProtocolRegistered(const QString &protocolName) {
+bool ProtocolRegistry::IsWinProtocolRegistered(const QString& protocolName) {
   QSettings settings("HKEY_CURRENT_USER\\Software\\Classes", QSettings::Format::NativeFormat);
 
   QString protocolKey = QString("%1/.").arg(protocolName);
@@ -85,7 +85,7 @@ bool ProtocolRegistry::IsWinProtocolRegistered(const QString &protocolName) {
 }
 
 #elif defined(Q_OS_LINUX)
-void ProtocolRegistry::RegisterLinuxProtocol(const QString &protocolName) {
+void ProtocolRegistry::RegisterLinuxProtocol(const QString& protocolName) {
   // Linux下通过.desktop文件注册协议
   QString desktopContent = QString(R"([Desktop Entry]
 Name=QClipboard Protocol Handler
@@ -95,9 +95,10 @@ Icon=%2
 Type=Application
 MimeType=x-scheme-handler/%3;
 NoDisplay=true
-)").arg(QCoreApplication::applicationFilePath())
-   .arg(QCoreApplication::applicationFilePath())
-   .arg(protocolName);
+)")
+                               .arg(QCoreApplication::applicationFilePath())
+                               .arg(QCoreApplication::applicationFilePath())
+                               .arg(protocolName);
 
   // 写入.desktop文件
   QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation) +
@@ -116,7 +117,7 @@ NoDisplay=true
   }
 }
 
-void ProtocolRegistry::UnregisterLinuxProtocol(const QString &protocolName) {
+void ProtocolRegistry::UnregisterLinuxProtocol(const QString& protocolName) {
   QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation) +
                         QString("/%1-protocol-handler.desktop").arg(protocolName);
 
@@ -125,7 +126,7 @@ void ProtocolRegistry::UnregisterLinuxProtocol(const QString &protocolName) {
   qDebug() << "Linux protocol unregistered:" << protocolName;
 }
 
-bool ProtocolRegistry::IsLinuxProtocolRegistered(const QString &protocolName) {
+bool ProtocolRegistry::IsLinuxProtocolRegistered(const QString& protocolName) {
   QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation) +
                         QString("/%1-protocol-handler.desktop").arg(protocolName);
 

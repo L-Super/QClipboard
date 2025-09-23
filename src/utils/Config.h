@@ -4,9 +4,9 @@
 
 #pragma once
 
+#include <expected>
 #include <filesystem>
 #include <optional>
-#include <expected>
 
 #include "nlohmann/json.hpp"
 
@@ -18,20 +18,22 @@ private:
   ~Config();
 
 public:
-  static Config &instance() {
+  static Config& instance() {
     static Config config;
     return config;
   }
 
-  std::expected<bool, std::string> load(const std::filesystem::path &file);
+  std::expected<bool, std::string> load(const std::filesystem::path& file);
   bool save() const;
 
-  template <typename T> void set(const std::string &key, T &&value) {
+  template<typename T>
+  void set(const std::string& key, T&& value) {
     // set data to json first
     data_[key] = std::forward<T>(value);
   }
 
-  template <typename T> std::optional<T> get(const std::string &key) const {
+  template<typename T>
+  std::optional<T> get(const std::string& key) const {
     if (!data_.contains(key))
       return {};
     return data_.at(key).get<T>();

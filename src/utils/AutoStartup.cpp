@@ -77,11 +77,13 @@ void AutoStartup::SetWinAutoStartup(bool enable) {
       QString newPath = QDir::toNativeSeparators(appPath);
       if (oldPath != newPath)
         settings.setValue(name, newPath);
-    } else // first setting
+    }
+    else // first setting
     {
       settings.setValue(name, QDir::toNativeSeparators(appPath));
     }
-  } else {
+  }
+  else {
     // cancel auto startup
     settings.remove(name);
   }
@@ -130,7 +132,8 @@ Hidden=)"};
 
     // write data
     out << text;
-  } catch (...) {
+  }
+  catch (...) {
     qDebug() << "AutoStart file write fail, raising Exception";
   }
 
@@ -146,7 +149,8 @@ bool AutoStartup::IsLinuxAutoStartup() {
       qDebug() << "AutoStart file open failed or not exist";
       return false;
     }
-  } catch (...) {
+  }
+  catch (...) {
     qDebug() << "AutoStart file open failed or not exist, raising Exception";
   }
 
@@ -204,7 +208,8 @@ void AutoStartup::SetMacAutoStartup(bool enable) {
     plistFile.close();
 
     qDebug() << "Auto-start enabled. Plist file created at:" << plistFilePath;
-  } else {
+  }
+  else {
     QFile plistFile(plistFilePath);
     if (plistFile.exists()) {
       if (!plistFile.remove()) {
