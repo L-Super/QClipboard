@@ -10,7 +10,6 @@
 #include "net/SyncServer.h"
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
-#include "utils/Util.h"
 
 #include <QAction>
 #include <QApplication>
@@ -31,7 +30,6 @@
 #include <QMimeData>
 #include <QPushButton>
 #include <QSizePolicy>
-#include <QStandardPaths>
 #include <QSystemTrayIcon>
 #include <QVBoxLayout>
 
@@ -277,7 +275,7 @@ bool Clipboard::InitSyncServer() {
       if (success) {
         const auto doc = QJsonDocument::fromJson(message.toUtf8());
         const auto obj = doc.object();
-        QString id = obj.value("id").toString();
+        int id = obj.value("id").toInt();
         QString created = obj.value("created_at").toString();
 
         spdlog::info("Upload data successful, id: {} created_at: {}", id, created);
@@ -333,7 +331,7 @@ bool Clipboard::InitSyncServer() {
         }
       }
       catch (const std::exception& e) {
-        spdlog::info("Websocket received data has exception. {}", e.what());
+        spdlog::error("Websocket received data has exception. {}", e.what());
       }
     });
     connect(sync.get(), &SyncServer::syncConnected, [] {});
