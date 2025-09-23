@@ -89,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent), ui(new Ui::MainWindow
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::keySequenceChanged, this,
   //         [this](const QKeySequence &keySequence) { qDebug() << "keySequenceChanged" << keySequence; });
   connect(ui->loginButton, &QPushButton::clicked, this, [this]() {
-    spdlog::info("login button clicked");
+    spdlog::info("Login button clicked");
     if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
       QDesktopServices::openUrl(QUrl(QString::fromStdString(url.value())));
     } else {

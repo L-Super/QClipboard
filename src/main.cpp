@@ -61,8 +61,8 @@ int main(int argc, char *argv[]) {
 
   auto configFilePath =
       QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/clipboard_settings.json";
-  if (Config::instance().load(configFilePath.toStdString())) {
-    spdlog::warn("config file is empty or not open");
+  if (auto re = Config::instance().load(configFilePath.toStdString()); !re.has_value()) {
+    spdlog::warn("Config file is unexpected. {}", re.error());
   }
 
   Clipboard c;

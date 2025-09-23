@@ -5,8 +5,11 @@
 #pragma once
 
 #include <filesystem>
-#include <nlohmann/json.hpp>
 #include <optional>
+#include <expected>
+
+#include "nlohmann/json.hpp"
+
 #include "../net/ClipboardStruct.h"
 
 class Config {
@@ -20,7 +23,7 @@ public:
     return config;
   }
 
-  bool load(const std::filesystem::path &file);
+  std::expected<bool, std::string> load(const std::filesystem::path &file);
   bool save() const;
 
   template <typename T> void set(const std::string &key, T &&value) {

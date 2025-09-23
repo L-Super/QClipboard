@@ -4,7 +4,8 @@
 
 #include "Config.h"
 #include <fstream>
-#include <iostream>
+
+#include "Logger.hpp"
 
 namespace fs = std::filesystem;
 
@@ -12,7 +13,7 @@ std::string Config::defaultApiUrl{"https://clipboard-api.limuran.top"};
 
 Config::~Config() { save(); }
 
-bool Config::load(const fs::path &file) {
+std::expected<bool, std::string> Config::load(const fs::path &file) {
   if (!fs::exists(file)) {
     auto parentPath = file.parent_path();
     if (!fs::exists(parentPath)) {
@@ -25,14 +26,14 @@ bool Config::load(const fs::path &file) {
   filepath_ = file;
   std::ifstream in(file);
   if (!in.is_open())
-    return false;
+    return std::unexpected("File not open");
 
   // Check if file is empty
   in.seekg(0, std::ios::end);
   if (in.tellg() == 0) {
     // File is empty, do not parse
     fillDefaultValues();
-    return false;
+    return std::unexpected("File is empty");
   }
   in.seekg(0, std::ios::beg);
 
@@ -40,8 +41,8 @@ bool Config::load(const fs::path &file) {
     data_ = nlohmann::json::parse(in);
     fillDefaultValues();
   } catch (const std::exception &e) {
-
-    return false;
+    spdlog::error("Config json parse failed. {}", e.what());
+    return std::unexpected(e.what());
   }
 
   return true;
@@ -66,7 +67,7 @@ std::optional<ServerConfig> Config::getServerConfig() const {
     ServerConfig server = data_["server"];
     return std::make_optional(server);
   } catch (const std::exception &e) {
-    std::cerr << e.what() << std::endl;
+    spdlog::error("Server config not found. {}", e.what());
   }
 
   return std::nullopt;
@@ -82,7 +83,7 @@ std::optional<UserInfo> Config::getUserInfo() const {
     UserInfo userInfo = data_["user_info"];
     return std::make_optional(userInfo);
   } catch (const std::exception &e) {
-    std::cerr << e.what() << std::endl;
+    spdlog::error("User info not found. {}", e.what());
   }
   return std::nullopt;
 }

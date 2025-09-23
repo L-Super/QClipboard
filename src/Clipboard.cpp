@@ -123,8 +123,7 @@ void Clipboard::DataChanged() {
     hashValue = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
 
     clipData.type = ClipboardDataType::text;
-    // use qCompress()
-    clipData.data = qCompress(latestText.toUtf8());
+    clipData.data = latestText.toUtf8();
   } else if (mimeData->hasImage()) {
     // 将图片数据转为QImage
     auto image = qvariant_cast<QImage>(mimeData->imageData());
@@ -247,98 +246,94 @@ void Clipboard::InitShortcut() {
 
 bool Clipboard::InitSyncServer() {
   auto userInfo = Config::instance().getUserInfo();
-  if (userInfo.has_value()) {
-    if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
-      if (sync) {
-        sync->stopSync();
-        sync.reset();
-      }
-      sync = std::make_unique<SyncServer>(QString::fromStdString(url.value()));
-      if (sync->setToken(QString::fromStdString(userInfo.value().token))) {
-        spdlog::info("Token is valid");
-      } else {
-        spdlog::info("Token is invalid");
-        sync.reset();
-        return false;
-      }
-
-      connect(sync.get(), &SyncServer::registrationFinished, [] {});
-      connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token &token, const QString &message) {
-        if (success)
-          qDebug() << "login successful";
-        else
-          qDebug() << "login failed." << message;
-      });
-      connect(sync.get(), &SyncServer::uploadFinished, [](bool success, const QString &message) {
-        if (success) {
-          const auto doc = QJsonDocument::fromJson(message.toUtf8());
-          const auto obj = doc.object();
-          QString id = obj.value("id").toString();
-          QString created = obj.value("created_at").toString();
-
-          spdlog::info("upload successful. id: {} created_at: {}", id, created);
-        }else {
-          spdlog::error("upload failed. {}", message);
-        }
-      });
-      connect(sync.get(), &SyncServer::imageDownloadFinished,
-              [this](bool success, const QImage &image, const QString &message) {
-                if (success) {
-                  spdlog::info("Image downloaded successfully, updating clipboard");
-                  clipboard->setImage(image);
-                } else {
-                  spdlog::info("Image download failed: {}", message);
-                }
-              });
-      connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString &message) {
-        // json:
-        //{
-        //  "action":"update",
-        //  "type":"", // text, image, file
-        //  "data":"",
-        //  "data_hash":"",
-        //  "meta":{}
-        //}
-
-        qDebug() << "websocket received:" << message;
-        try {
-          const auto doc = QJsonDocument::fromJson(message.toUtf8());
-          const auto obj = doc.object();
-          auto type = obj.value("type").toString();
-          auto data = obj.value("data").toString();
-
-          if (type == "text") {
-            auto uncompressData = qUncompress(data.toUtf8());
-            if (uncompressData.isNull() || uncompressData.isEmpty()) {
-              spdlog::info("Maybe not use qCompress(), add raw data");
-              clipboard->setText(data);
-            } else {
-              clipboard->setText(uncompressData);
-            }
-
-          } else if (type == "image") {
-            // 当接收到image类型时，data字段为图片的URL
-            const auto &imageUrl = data;
-            spdlog::info("received image url:{}", imageUrl);
-
-            // 调用下载逻辑
-            if (sync) {
-              sync->downloadImage(imageUrl);
-            }
-          } else if (type == "file") {
-          }
-
-        } catch (const std::exception &e) {
-          spdlog::info("websocket received exception. {}", e.what());
-        }
-      });
-      connect(sync.get(), &SyncServer::syncConnected, [] {});
-      connect(sync.get(), &SyncServer::syncDisconnected, [] {});
-      connect(sync.get(), &SyncServer::syncError, [] {});
-      return true;
-    }
+  if (!userInfo.has_value()) {
+    spdlog::warn("User info not exist");
+    return false;
   }
-  spdlog::warn("user info not exist");
+
+  if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
+    if (sync) {
+      sync->stopSync();
+      sync.reset();
+    }
+    sync = std::make_unique<SyncServer>(QString::fromStdString(url.value()));
+    if (!sync->setToken(QString::fromStdString(userInfo.value().token))) {
+      spdlog::warn("Token is invalid");
+      sync.reset();
+      return false;
+    }
+
+    connect(sync.get(), &SyncServer::registrationFinished, [] {});
+    connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token &token, const QString &message) {
+      if (success)
+        qDebug() << "login successful";
+      else
+        qDebug() << "login failed." << message;
+    });
+    connect(sync.get(), &SyncServer::uploadFinished, [](bool success, const QString &message) {
+      if (success) {
+        const auto doc = QJsonDocument::fromJson(message.toUtf8());
+        const auto obj = doc.object();
+        QString id = obj.value("id").toString();
+        QString created = obj.value("created_at").toString();
+
+        spdlog::info("Upload data successful, id: {} created_at: {}", id, created);
+      } else {
+        spdlog::error("Upload data failed. {}", message);
+      }
+    });
+    connect(sync.get(), &SyncServer::imageDownloadFinished,
+            [this](bool success, const QImage &image, const QString &message) {
+              if (success) {
+                spdlog::info("Image downloaded successfully, updating clipboard");
+                clipboard->setImage(image);
+              } else {
+                spdlog::warn("Image download failed: {}", message);
+              }
+            });
+    connect(sync.get(), &SyncServer::notifyMessageReceived, [this](const QString &message) {
+      // json:
+      //{
+      //  "action":"update",
+      //  "type":"", // text, image, file
+      //  "data":"",
+      //  "data_hash":"",
+      //  "meta":{}
+      //}
+
+      spdlog::debug("Websocket received: {}", message);
+      spdlog::info("Message received from websocket");
+      try {
+        const auto doc = QJsonDocument::fromJson(message.toUtf8());
+        const auto obj = doc.object();
+        auto type = obj.value("type").toString();
+        auto data = obj.value("data").toString();
+
+        if (type == "text") {
+          if (!data.isEmpty()) {
+            clipboard->setText(data);
+          }
+        } else if (type == "image") {
+          // 当接收到image类型时，data字段为图片的URL
+          const auto &imageUrl = data;
+          spdlog::info("Received image url:{}", imageUrl);
+
+          // 调用下载逻辑
+          if (sync) {
+            sync->downloadImage(imageUrl);
+          }
+        } else if (type == "file") {
+        }
+
+      } catch (const std::exception &e) {
+        spdlog::info("Websocket received data has exception. {}", e.what());
+      }
+    });
+    connect(sync.get(), &SyncServer::syncConnected, [] {});
+    connect(sync.get(), &SyncServer::syncDisconnected, [] {});
+    connect(sync.get(), &SyncServer::syncError, [] {});
+    return true;
+  }
   return false;
 }
 

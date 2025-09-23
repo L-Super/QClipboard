@@ -3,7 +3,7 @@ project(QClipboard
         VERSION 2.0.5.0 # Set application version. For more details, see src/version.h.in
 )
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
