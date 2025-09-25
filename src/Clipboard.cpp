@@ -70,7 +70,7 @@ Clipboard::Clipboard(QWidget *parent)
   connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
   connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *listWidgetItem) {
     Item *item = qobject_cast<Item *>(listWidget->itemWidget(listWidgetItem));
-    QSignalBlocker blocker(clipboard);
+
     switch (item->GetMetaType()) {
     case QMetaType::QString: {
       clipboard->setText(item->GetText());
