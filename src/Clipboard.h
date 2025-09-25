@@ -54,4 +54,5 @@ class Clipboard : public QWidget {
     QHash<QByteArray, QListWidgetItem *> hashItemMap;
     MainWindow* homeWidget;
     QString configFilePath;
+    bool ignoreNextDataChange{false};
 };

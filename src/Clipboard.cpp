@@ -71,6 +71,9 @@ Clipboard::Clipboard(QWidget *parent)
   connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *listWidgetItem) {
     Item *item = qobject_cast<Item *>(listWidget->itemWidget(listWidgetItem));
 
+    // 设置标志位，忽略下一次dataChanged信号
+    ignoreNextDataChange = true;
+
     switch (item->GetMetaType()) {
     case QMetaType::QString: {
       clipboard->setText(item->GetText());
@@ -96,6 +99,11 @@ Clipboard::Clipboard(QWidget *parent)
 Clipboard::~Clipboard() { homeWidget->deleteLater(); }
 
 void Clipboard::DataChanged() {
+  if (ignoreNextDataChange) {
+    ignoreNextDataChange = false;
+    // 忽略这次信号
+    return;
+  }
   QVariant data;
   QByteArray hashValue;
   const QMimeData *mimeData = clipboard->mimeData();
