@@ -21,6 +21,7 @@ signals:
   void disconnected();
   void notifyMessageReceived(const QString& message);
   void errorOccurred(QAbstractSocket::SocketError error);
+  void reconnectExhausted();
 
 private slots:
   void onConnected();
@@ -31,8 +32,17 @@ private slots:
   void tryReconnect();
 
 private:
+  // 安排下一次重连（带退避与抖动）
+  void scheduleReconnect();
+
+private:
   QWebSocket webSocket;
   QUrl serverUrl;
   QTimer reconnectTimer;
-  const int reconnectIntervalMs = 5000;
+  // 退避重连参数
+  const int reconnectBaseIntervalMs{2000}; // 初始重试间隔
+  const int reconnectMaxIntervalMs{60000}; // 最大退避间隔
+  int reconnectAttempt{0};                 // 已重试次数
+  int reconnectMaxAttempts{12};            // 最大重试次数（到达即停止）
+  bool userRequestedDisconnect{false};     // 用户主动断开则不再自动重连
 };

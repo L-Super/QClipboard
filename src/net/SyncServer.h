@@ -46,6 +46,7 @@ signals:
   void syncConnected();
   void syncDisconnected();
   void syncError(QAbstractSocket::SocketError error);
+  void reconnectExhausted();
 
 private slots:
   // 处理登录成功后的逻辑：保存 token 并（重新）启动 WebSocket

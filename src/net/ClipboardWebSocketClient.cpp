@@ -1,6 +1,7 @@
 #include "ClipboardWebSocketClient.h"
 #include "../utils/Logger.hpp"
 #include <QDebug>
+#include <QRandomGenerator>
 
 #include <magic_enum/magic_enum.hpp>
 
@@ -10,8 +11,7 @@ ClipboardWebSocketClient::ClipboardWebSocketClient(const QUrl& url, QObject* par
   connect(&webSocket, &QWebSocket::errorOccurred, this, &ClipboardWebSocketClient::onError);
   connect(&webSocket, &QWebSocket::disconnected, this, &ClipboardWebSocketClient::onDisconnected);
 
-  // 重连定时器
-  reconnectTimer.setInterval(reconnectIntervalMs);
+  // 重连定时器（首次不启动，按需设置动态间隔）
   reconnectTimer.setSingleShot(true);
   connect(&reconnectTimer, &QTimer::timeout, this, &ClipboardWebSocketClient::tryReconnect);
 }
@@ -22,6 +22,7 @@ void ClipboardWebSocketClient::connectToServer() {
   if (webSocket.state() == QAbstractSocket::ConnectedState || webSocket.state() == QAbstractSocket::ConnectingState) {
     return;
   }
+  userRequestedDisconnect = false;
   QUrl url(serverUrl);
   url.setQuery(QString()); // 清空查询
 
@@ -30,13 +31,17 @@ void ClipboardWebSocketClient::connectToServer() {
 }
 
 void ClipboardWebSocketClient::disconnectFromServer() {
+  userRequestedDisconnect = true;
   reconnectTimer.stop();
+  reconnectAttempt = 0;
   webSocket.close();
 }
 
 void ClipboardWebSocketClient::onConnected() {
   emit connected();
   spdlog::info("WebSocket connected.");
+  // 成功连接后重置重试状态
+  reconnectAttempt = 0;
 
   // 订阅 /sync/notify（如果服务端需要额外握手可以在这里发送订阅消息）
   // webSocket.sendTextMessage(QStringLiteral("{\"action\":\"subscribe\",\"topic\":\"/sync/notify\"}"));
@@ -63,8 +68,7 @@ void ClipboardWebSocketClient::onError(QAbstractSocket::SocketError error) {
   spdlog::error("WebSocket error:{} {}", magic_enum::enum_name(error), webSocket.errorString());
 
   // 启动重连
-  if (!reconnectTimer.isActive())
-    reconnectTimer.start();
+  scheduleReconnect();
 }
 
 void ClipboardWebSocketClient::onDisconnected() {
@@ -72,11 +76,45 @@ void ClipboardWebSocketClient::onDisconnected() {
   spdlog::warn("WebSocket disconnected.");
 
   // 尝试重连
-  if (!reconnectTimer.isActive())
-    reconnectTimer.start();
+  scheduleReconnect();
 }
 
 void ClipboardWebSocketClient::tryReconnect() {
   spdlog::warn("Reconnecting...");
   connectToServer();
+}
+
+void ClipboardWebSocketClient::scheduleReconnect() {
+  if (userRequestedDisconnect) {
+    spdlog::info("Skip reconnect: user requested disconnect.");
+    return;
+  }
+  if (webSocket.state() == QAbstractSocket::ConnectedState || webSocket.state() == QAbstractSocket::ConnectingState) {
+    return;
+  }
+  if (reconnectMaxAttempts > 0 && reconnectAttempt >= reconnectMaxAttempts) {
+    spdlog::error("Max reconnect attempts reached ({}). Stop trying.", reconnectMaxAttempts);
+    emit reconnectExhausted();
+    return;
+  }
+
+  // 计算指数退避间隔，带抖动
+  const int backoffPow = std::min(reconnectAttempt, 16);                        // 防溢出保护
+  qint64 interval = static_cast<qint64>(reconnectBaseIntervalMs) << backoffPow; // base * 2^attempt
+  if (interval > reconnectMaxIntervalMs)
+    interval = reconnectMaxIntervalMs;
+  // 抖动：在 [0.5x, 1.0x] 之间随机
+  double jitter = 0.5 + (QRandomGenerator::global()->bounded(51) / 100.0); // 0.5~1.0
+  int delayMs = static_cast<int>(interval * jitter);
+  if (delayMs < reconnectBaseIntervalMs)
+    delayMs = reconnectBaseIntervalMs;
+
+  reconnectAttempt++;
+  reconnectTimer.stop();
+  reconnectTimer.setInterval(delayMs);
+
+  spdlog::warn("Schedule reconnect #{} in {} ms", reconnectAttempt, delayMs);
+
+  if (!reconnectTimer.isActive())
+    reconnectTimer.start();
 }

@@ -107,6 +107,7 @@ void SyncServer::handleLoginFinished(bool success, const Token& token, const QSt
   connect(wsClient, &ClipboardWebSocketClient::disconnected, this, &SyncServer::syncDisconnected);
   connect(wsClient, &ClipboardWebSocketClient::errorOccurred, this, &SyncServer::syncError);
   connect(wsClient, &ClipboardWebSocketClient::notifyMessageReceived, this, &SyncServer::notifyMessageReceived);
+  connect(wsClient, &ClipboardWebSocketClient::reconnectExhausted, this, &SyncServer::reconnectExhausted);
 
   // 自动建立连接
   wsClient->connectToServer();
