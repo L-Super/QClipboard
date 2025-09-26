@@ -7,6 +7,7 @@
 #include <QSet>
 #include <QSystemTrayIcon>
 #include <QWidget>
+#include <atomic>
 #include <memory>
 
 class QMenu;
@@ -60,4 +61,5 @@ private:
   MainWindow* homeWidget;
   QString configFilePath;
   std::unique_ptr<SyncServer> sync;
+  std::atomic_bool ignoreNextDataChange{false};
 };

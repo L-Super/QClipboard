@@ -76,6 +76,8 @@ Clipboard::Clipboard(QWidget* parent)
   connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem* listWidgetItem) {
     Item* item = qobject_cast<Item*>(listWidget->itemWidget(listWidgetItem));
 
+    // 忽略下一次dataChanged信号
+    ignoreNextDataChange.store(true, std::memory_order_relaxed);
     switch (item->GetMetaType()) {
     case QMetaType::QString: {
       clipboard->setText(item->GetText());
@@ -108,6 +110,12 @@ void Clipboard::ReloadSyncServer() {
 }
 
 void Clipboard::DataChanged() {
+  if (ignoreNextDataChange) {
+    ignoreNextDataChange = false;
+    // 忽略这次信号
+    return;
+  }
+
   QVariant data;
   QByteArray hashValue;
   ClipboardData clipData;
@@ -180,7 +188,6 @@ void Clipboard::StayOnTop() {
 }
 
 void Clipboard::InitTrayMenu() {
-  // TODO:update icon
   trayIcon->setIcon(QIcon(":/resources/icon.png"));
   // 在右键时，弹出菜单。
   trayIcon->setContextMenu(trayMenu);
@@ -288,6 +295,8 @@ bool Clipboard::InitSyncServer() {
             [this](bool success, const QImage& image, const QString& message) {
               if (success) {
                 spdlog::info("Image downloaded successfully, updating clipboard");
+                // 忽略下一次dataChanged信号
+                ignoreNextDataChange.store(true, std::memory_order_relaxed);
                 clipboard->setImage(image);
               }
               else {
@@ -314,6 +323,8 @@ bool Clipboard::InitSyncServer() {
 
         if (type == "text") {
           if (!data.isEmpty()) {
+            // 忽略下一次dataChanged信号
+            ignoreNextDataChange.store(true, std::memory_order_relaxed);
             clipboard->setText(data);
           }
         }
