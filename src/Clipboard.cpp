@@ -159,6 +159,11 @@ void Clipboard::DataChanged() {
   }
 
   AddItem(data, hashValue);
+
+  if (ignoreNetDataChange) {
+    ignoreNetDataChange = false;
+    return;
+  }
   if (sync)
     sync->uploadClipboardData(clipData);
 }
@@ -296,7 +301,7 @@ bool Clipboard::InitSyncServer() {
               if (success) {
                 spdlog::info("Image downloaded successfully, updating clipboard");
                 // 忽略下一次dataChanged信号
-                ignoreNextDataChange.store(true, std::memory_order_relaxed);
+                ignoreNetDataChange.store(true, std::memory_order_relaxed);
                 clipboard->setImage(image);
               }
               else {
@@ -324,7 +329,7 @@ bool Clipboard::InitSyncServer() {
         if (type == "text") {
           if (!data.isEmpty()) {
             // 忽略下一次dataChanged信号
-            ignoreNextDataChange.store(true, std::memory_order_relaxed);
+            ignoreNetDataChange.store(true, std::memory_order_relaxed);
             clipboard->setText(data);
           }
         }

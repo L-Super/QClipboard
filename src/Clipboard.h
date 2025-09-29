@@ -62,4 +62,5 @@ private:
   QString configFilePath;
   std::unique_ptr<SyncServer> sync;
   std::atomic_bool ignoreNextDataChange{false};
+  std::atomic_bool ignoreNetDataChange{false};
 };
