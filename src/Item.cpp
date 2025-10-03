@@ -20,17 +20,9 @@ Item::Item(QWidget* parent) : QWidget(parent), ui(new Ui::Item) {
   connect(ui->deletePushButton, &QPushButton::clicked, this, &Item::DeleteButtonClicked);
 }
 
-Item::Item(const QString& text, QWidget* parent) : QWidget(parent), ui(new Ui::Item) {
-  ui->setupUi(this);
-
-  ui->label->setWordWrap(true);
-  ui->label->setAlignment(Qt::AlignTop);
-  ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
-  //	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
-
+Item::Item(const QString& text, QWidget* parent) : Item(parent) {
+  //
   ui->label->setText(text);
-
-  connect(ui->deletePushButton, &QPushButton::clicked, this, &Item::DeleteButtonClicked);
 }
 
 Item::~Item() { delete ui; }
@@ -48,8 +40,12 @@ void Item::SetData(const QVariant& data, const QByteArray& hash) {
     ui->label->setPixmap(pixmap);
   }
   else if (metaType == QMetaType::QImage) {
+    qDebug() << "Item add QImage";
+
     latestImage = data.value<QImage>();
-    ui->label->setPixmap(QPixmap::fromImage(latestImage));
+
+    auto pixmap = latestImage.scaled(this->size(), Qt::KeepAspectRatio, Qt::FastTransformation);
+    ui->label->setPixmap(QPixmap::fromImage(pixmap));
   }
 
   hashValue = hash;

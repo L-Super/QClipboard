@@ -42,7 +42,7 @@ signals:
 
 private:
   Ui::Item* ui;
-  QListWidgetItem* listItem;
+  QListWidgetItem* listItem{};
   QImage latestImage;
   QByteArray hashValue;
   int metaType{0}; // default is UnknownType
