@@ -37,6 +37,7 @@ protected slots:
   void RemoveItem(QListWidgetItem* item);
   void StayOnTop();
   void TrayIconActivated(QSystemTrayIcon::ActivationReason reason);
+  void OnItemClicked(QListWidgetItem *item);
 
 private:
   void InitTrayMenu();
@@ -45,6 +46,7 @@ private:
   bool InitSyncServer();
 
 protected:
+  void showEvent(QShowEvent* event) override;
   void closeEvent(QCloseEvent* event) override;
   bool eventFilter(QObject* obj, QEvent* event) override;
 
