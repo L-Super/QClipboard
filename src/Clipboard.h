@@ -32,6 +32,7 @@ class Clipboard : public QWidget {
     void RemoveItem(QListWidgetItem *item);
     void StayOnTop();
     void TrayIconActivated(QSystemTrayIcon::ActivationReason reason);
+    void OnItemClicked(QListWidgetItem *item);
 
   private:
     void InitTrayMenu();
@@ -39,6 +40,7 @@ class Clipboard : public QWidget {
     void SetShortcut();
 
   protected:
+    void showEvent(QShowEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
 

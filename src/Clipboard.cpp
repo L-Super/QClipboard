@@ -28,11 +28,6 @@
 #include <QSystemTrayIcon>
 #include <QVBoxLayout>
 
-// TODO:
-//  1. 设置不冲突的快捷键, 考虑增加配置文件，支持更改快捷键
-//  2. macOS适配
-//  3. 点击item时，自动在光标处粘贴
-
 Clipboard::Clipboard(QWidget *parent)
     : QWidget(parent), clipboard(QApplication::clipboard()), trayIcon(new QSystemTrayIcon(this)), trayMenu(new QMenu()),
       hotkey(new QHotkey(this)), listWidget(new QListWidget(this)), homeWidget(new MainWindow()) {
@@ -68,25 +63,7 @@ Clipboard::Clipboard(QWidget *parent)
   qApp->installEventFilter(this);
 
   connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
-  connect(listWidget, &QListWidget::itemClicked, this, [this](QListWidgetItem *listWidgetItem) {
-    Item *item = qobject_cast<Item *>(listWidget->itemWidget(listWidgetItem));
-
-    // 设置标志位，忽略下一次dataChanged信号
-    ignoreNextDataChange = true;
-
-    switch (item->GetMetaType()) {
-    case QMetaType::QString: {
-      clipboard->setText(item->GetText());
-      this->hide();
-    } break;
-    case QMetaType::QImage: {
-      clipboard->setImage(item->GetImage());
-      this->hide();
-    } break;
-    default:
-      break;
-    }
-  });
+  connect(listWidget, &QListWidget::itemClicked, this, &Clipboard::OnItemClicked);
 
   connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
   connect(homeWidget, &MainWindow::shortcutChangedSignal, this, [this](const QKeySequence &keySequence) {
@@ -221,6 +198,18 @@ void Clipboard::SetShortcut() {
   connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
 
+void Clipboard::showEvent(QShowEvent *event) {
+  listWidget->setFocusPolicy(Qt::StrongFocus);
+  listWidget->setFocus();
+  // 设置默认选中第一项并滚动到顶部
+  if (listWidget->count() > 0) {
+    listWidget->setCurrentRow(0);
+    listWidget->scrollToTop();
+  }
+
+  QWidget::showEvent(event);
+}
+
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   switch (reason) {
   case QSystemTrayIcon::Trigger:
@@ -231,6 +220,28 @@ void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   default:
     break;
   }
+}
+
+void Clipboard::OnItemClicked(QListWidgetItem *listWidgetItem) {
+  Item *item = qobject_cast<Item *>(listWidget->itemWidget(listWidgetItem));
+
+  // 设置标志位，忽略下一次dataChanged信号
+  ignoreNextDataChange = true;
+
+  switch (item->GetMetaType()) {
+  case QMetaType::QString: {
+    clipboard->setText(item->GetText());
+    this->hide();
+  } break;
+  case QMetaType::QImage: {
+    clipboard->setImage(item->GetImage());
+    this->hide();
+  } break;
+  default:
+    break;
+  }
+
+  MoveItemToTop(item->GetHashValue());
 }
 
 void Clipboard::AddItem(const QVariant &data, const QByteArray &hash) {
@@ -283,6 +294,11 @@ bool Clipboard::eventFilter(QObject *obj, QEvent *event) {
     // 按ESC键时隐藏窗口
     auto *keyEvent = dynamic_cast<QKeyEvent *>(event);
     if (keyEvent->key() == Qt::Key_Escape) {
+      hide();
+      return true;
+    }
+    if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) {
+      OnItemClicked(listWidget->currentItem());
       hide();
       return true;
     }

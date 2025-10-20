@@ -15,6 +15,12 @@ QListWidget::item:hover {
     border-left: 3px solid #828282;
 }
 
+QListWidget::item:selected {
+    background-color: #f0f0f0;
+    border-left: 3px solid #2090e6;
+    padding: 10px;
+}
+
 QScrollBar:vertical {  
     border: none; 
     background: transparent; 
