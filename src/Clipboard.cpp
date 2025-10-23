@@ -356,17 +356,18 @@ void Clipboard::OnItemClicked(QListWidgetItem* listWidgetItem) {
   switch (item->GetMetaType()) {
   case QMetaType::QString: {
     clipboard->setText(item->GetText());
-    this->hide();
   } break;
   case QMetaType::QImage: {
     clipboard->setImage(item->GetImage());
-    this->hide();
   } break;
   default:
     break;
   }
 
+  // 先移动item到顶部，这会自动设置当前行和滚动位置
   MoveItemToTop(item->GetHashValue());
+
+  hide();
 }
 
 void Clipboard::AddItem(const QVariant& data, const QByteArray& hash) {
@@ -399,9 +400,9 @@ void Clipboard::MoveItemToTop(const QByteArray& hashValue) {
   // 把 row 移动到 parent() 下的 0 位置
   listWidget->model()->moveRow(QModelIndex(), row, QModelIndex(), 0);
 
-  // TODO:或许指针地址改变
-  //   hashItemMap.remove(hashValue);
-  //   hashItemMap.insert(hashValue, listItem);
+  // 移动后，确保选中第一项（索引0）
+  listWidget->setCurrentRow(0);
+  listWidget->scrollToTop();
 }
 
 void Clipboard::showEvent(QShowEvent* event) {
