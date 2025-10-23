@@ -101,10 +101,10 @@ void Clipboard::DataChanged() {
   } else if (mimeData->hasUrls()) {
     qDebug() << "has urls" << mimeData->urls();
   }
-    
+
   if (data.isNull() || hashValue.isEmpty())
     return;
-    
+
   // 如果已存在，则把对应 item 搬到最前面
   if (hashItemMap.contains(hashValue)) {
     MoveItemToTop(hashValue);
@@ -203,7 +203,9 @@ void Clipboard::showEvent(QShowEvent *event) {
   listWidget->setFocus();
   // 设置默认选中第一项并滚动到顶部
   if (listWidget->count() > 0) {
-    listWidget->setCurrentRow(0);
+    if (listWidget->currentRow() != 0) {
+      listWidget->setCurrentRow(0);
+    }
     listWidget->scrollToTop();
   }
 
@@ -231,17 +233,18 @@ void Clipboard::OnItemClicked(QListWidgetItem *listWidgetItem) {
   switch (item->GetMetaType()) {
   case QMetaType::QString: {
     clipboard->setText(item->GetText());
-    this->hide();
   } break;
   case QMetaType::QImage: {
     clipboard->setImage(item->GetImage());
-    this->hide();
   } break;
   default:
     break;
   }
 
+  // 先移动item到顶部，这会自动设置当前行和滚动位置
   MoveItemToTop(item->GetHashValue());
+
+  hide();
 }
 
 void Clipboard::AddItem(const QVariant &data, const QByteArray &hash) {
@@ -274,9 +277,9 @@ void Clipboard::MoveItemToTop(const QByteArray &hashValue) {
   // 把 row 移动到 parent() 下的 0 位置
   listWidget->model()->moveRow(QModelIndex(), row, QModelIndex(), 0);
 
-  // TODO:或许指针地址改变
-  //   hashItemMap.remove(hashValue);
-  //   hashItemMap.insert(hashValue, listItem);
+  // 移动后，确保选中第一项（索引0）
+  listWidget->setCurrentRow(0);
+  listWidget->scrollToTop();
 }
 
 void Clipboard::closeEvent(QCloseEvent *event) {
@@ -299,7 +302,6 @@ bool Clipboard::eventFilter(QObject *obj, QEvent *event) {
     }
     if (keyEvent->key() == Qt::Key_Return || keyEvent->key() == Qt::Key_Enter) {
       OnItemClicked(listWidget->currentItem());
-      hide();
       return true;
     }
   }
