@@ -115,7 +115,11 @@ void ClipboardApiClient::onNetworkReply(QNetworkReply* reply) {
 
   if (reply->error() != QNetworkReply::NoError) {
     QString err = reply->errorString();
-    spdlog::error("On network reply. Error: {}", err);
+    QVariant statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+
+    spdlog::error("On network reply. Url: {} status code: {} error type: {} error message: {}", reply->url().toString(),
+                  statusCode.isValid() ? statusCode.toInt() : -1, magic_enum::enum_name(reply->error()), err);
+
     switch (ep) {
     case Endpoint::Register:
       emit registrationFinished(false, err);
@@ -176,6 +180,8 @@ void ClipboardApiClient::handleJsonResponse(QNetworkReply* reply, Endpoint ep) {
     QString message = obj.value("message").toString();
     emit verifyTokenFinished(success, message);
   } break;
+  default:
+    break;
   }
 }
 

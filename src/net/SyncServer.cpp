@@ -128,14 +128,14 @@ bool SyncServer::verifyTokenValid(const QString& token) {
       loop.quit();
   };
 
-  QObject::connect(&timer, &QTimer::timeout, &loop, [&] {
+  connect(&timer, &QTimer::timeout, &loop, [&] {
     ok = false;
     msg = "verify-token timeout";
     if (loop.isRunning())
       loop.quit();
   });
 
-  QObject::connect(apiClient, &ClipboardApiClient::verifyTokenFinished, &loop, onFinished);
+  connect(apiClient, &ClipboardApiClient::verifyTokenFinished, &loop, onFinished);
 
   // 发送请求
   apiClient->verifyToken(token);
@@ -144,7 +144,7 @@ bool SyncServer::verifyTokenValid(const QString& token) {
   timer.start(5000);
   loop.exec();
 
-  QObject::disconnect(apiClient, &ClipboardApiClient::verifyTokenFinished, &loop, nullptr);
+  disconnect(apiClient, &ClipboardApiClient::verifyTokenFinished, &loop, nullptr);
 
   return ok;
 }
