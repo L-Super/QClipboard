@@ -1,6 +1,6 @@
 QListWidget {
-    background-color: #fafafa;
-    border: 10px solid #fafafa;
+    background-color: #222222;
+    border: 10px solid #444857;
     border-radius: 10px;
     outline: none;
 }
@@ -12,37 +12,37 @@ QListWidget::item {
 
 QListWidget::item:hover {
     background-color: transparent;
-    border-left: 3px solid #979696;
+    border-left: 3px solid #c8c7c7;
     padding: 10px;
 }
 
 QListWidget::item:selected {
     background-color: transparent;
-    border-left: 3px solid #828282;
+    border-left: 3px solid #e8e8e8;
     padding: 10px;
 }
 
 QPushButton {
-    background-color: #f8f9fa;
-    color: #222222;
-    border: 1px solid #dee2e6;
+    background-color: #2d2d2d;
+    color: #ffffff;
+    border: 1px solid #495057;
     padding: 4px 4px;
-    border-radius: 5px;
+    border-radius: 6px;
 }
 
 QPushButton:hover {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
+    background-color: #3d3d3d;
+    border-color: #6c757d;
 }
 
 QPushButton:pressed {
-    background-color: #dee2e6;
+    background-color: #495057;
 }
 
 QLineEdit, QTextEdit, QPlainTextEdit {
-    background-color: #ffffff;
-    color: #222222;
-    border: 1px solid #dee2e6;
+    background-color: #1a1a1a;
+    color: #e9ecef;
+    border: 1px solid #495057;
     border-radius: 6px;
     padding: 8px;
     selection-background-color: #557697;
@@ -50,7 +50,7 @@ QLineEdit, QTextEdit, QPlainTextEdit {
 }
 
 QCheckBox, QRadioButton, QLabel {
-    color: #222222;
+    color: #ffffff;
 }
 
 /* 整个垂直滚动条区域样式 */
@@ -68,7 +68,7 @@ QScrollBar:vertical:hover, QScrollBar:horizontal:hover {
 
 /* 滑块样式 */
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
-    background: rgb(210, 210, 210);
+    background: #495057;
     min-height: 20px;
     width: 6px;
     border-radius: 3px;
@@ -76,7 +76,7 @@ QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
 }
 
 QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
-    background: rgb(190, 190, 190);
+    background: rgb(150, 150, 150);
 }
 
 /* 隐藏上下的箭头按钮 */
@@ -92,10 +92,10 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical, QScrollBar::add-pa
 }
 
 QMenu {
-    background-color: #ffffff;
-    color: #222222;
+    background-color: #1a1a1a;
+    color: #ffffff;
     border-radius: 5px;
-    border: 1px solid #dee2e6;
+    border: 1px solid #495057;
     padding: 5px;
 }
 
@@ -105,16 +105,16 @@ QMenu::item {
     border-radius: 5px;
     padding: 5px;
     min-height: 10px;
-    color: #212529;
+    color: #e9ecef;
 }
 
 QMenu::item:selected {
-    background-color: #e9ecef;
-    border-color: #adb5bd;
+    background-color: #3d3d3d;
+    border-color: #6c757d;
 }
 
 QMenu::separator {
     height: 1px;
-    background-color: #dee2e6;
+    background-color: #495057;
     margin: 4px 8px;
 }

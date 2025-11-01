@@ -35,6 +35,7 @@ class Item : public QWidget {
 
   protected:
     void DeleteButtonClicked();
+    void ApplyTheme(Qt::ColorScheme colorScheme);
 
   signals:
     void itemClickedSignal(const QString &text);
