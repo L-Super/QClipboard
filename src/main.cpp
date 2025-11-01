@@ -10,7 +10,30 @@
 #include <QDebug>
 #include <QFile>
 #include <QStandardPaths>
+#include <QStyleHints>
 #include <QUrl>
+
+void LoadStyleSheet(const QString& stylePath) {
+  QFile style(stylePath);
+  if (style.open(QFile::ReadOnly)) {
+    qApp->setStyleSheet(style.readAll());
+  }
+  style.close();
+}
+
+void ApplyTheme(Qt::ColorScheme scheme) {
+  switch (scheme) {
+  case Qt::ColorScheme::Dark:
+    LoadStyleSheet(":/qss/resources/style_dark.css");
+    break;
+  case Qt::ColorScheme::Light:
+    LoadStyleSheet(":/qss/resources/style.css");
+  case Qt::ColorScheme::Unknown:
+    LoadStyleSheet(":/qss/resources/style.css");
+    break;
+  }
+  qDebug() << "ApplyTheme to" << scheme;
+}
 
 int main(int argc, char* argv[]) {
   SingleApplication a(argc, argv, true);
@@ -45,11 +68,7 @@ int main(int argc, char* argv[]) {
 
   a.setApplicationVersion(VERSION_STR);
 
-  QFile style(":/qss/resources/style.css");
-  if (style.open(QFile::ReadOnly)) {
-    qApp->setStyleSheet(style.readAll());
-    style.close();
-  }
+  ApplyTheme(QGuiApplication::styleHints()->colorScheme());
 
   // 控制着当最后一个可视的窗口退出时候，程序是否退出，默认是true
   QApplication::setQuitOnLastWindowClosed(false);
@@ -75,6 +94,12 @@ int main(int argc, char* argv[]) {
                      protocolHandler.HandleProtocolUrl(message);
                    });
   QObject::connect(&a, &SingleApplication::instanceStarted, &c, &Clipboard::show);
+  // 连接系统主题变化信号 Qt 6.5 support
+  QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, [](Qt::ColorScheme scheme) {
+    qDebug() << "System theme change to" << scheme;
+    ApplyTheme(scheme);
+  });
+
   // 连接协议处理器的信号到剪贴板对象
   QObject::connect(&protocolHandler, &ProtocolHandler::loginDataReceived, &c,
                    [&c](const UserInfo& userInfo, const QVariantMap& additionalData) {

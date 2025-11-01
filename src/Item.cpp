@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QListWidgetItem>
 #include <QPixmap>
+#include <QStyleHints>
 #include <QVariant>
 
 Item::Item(QWidget* parent) : QWidget(parent), ui(new Ui::Item) {
@@ -17,6 +18,12 @@ Item::Item(QWidget* parent) : QWidget(parent), ui(new Ui::Item) {
   ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
   //	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
 
+  ui->pushButton->hide();
+
+  ApplyTheme(QGuiApplication::styleHints()->colorScheme());
+
+  // 连接系统主题变化信号 Qt 6.5 support
+  connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, &Item::ApplyTheme);
   connect(ui->deletePushButton, &QPushButton::clicked, this, &Item::DeleteButtonClicked);
 }
 
@@ -60,6 +67,20 @@ void Item::SetListWidgetItem(QListWidgetItem* listWidgetItem) { listItem = listW
 QListWidgetItem* Item::GetListWidgetItem() const { return listItem == nullptr ? nullptr : listItem; }
 
 void Item::DeleteButtonClicked() { emit deleteButtonClickedSignal(GetListWidgetItem()); }
+
+void Item::ApplyTheme(Qt::ColorScheme scheme) {
+  switch (scheme) {
+  case Qt::ColorScheme::Dark:
+    ui->deletePushButton->setIcon(QIcon(":/resources/images/delete-white.svg"));
+    break;
+  case Qt::ColorScheme::Light:
+    ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
+    break;
+  case Qt::ColorScheme::Unknown:
+    ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
+    break;
+  }
+}
 
 QImage Item::GetImage() const { return latestImage; }
 

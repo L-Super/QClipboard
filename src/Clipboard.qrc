@@ -4,6 +4,7 @@
         <file>resources/images/setting.svg</file>
         <file>resources/images/info.svg</file>
         <file>resources/images/delete.svg</file>
+        <file>resources/images/delete-white.svg</file>
         <file>resources/images/action-home.svg</file>
         <file>resources/images/home.svg</file>
         <file>resources/images/sync.svg</file>
@@ -17,5 +18,6 @@
     </qresource>
     <qresource prefix="/qss">
         <file>resources/style.css</file>
+        <file>resources/style_dark.css</file>
     </qresource>
 </RCC>
