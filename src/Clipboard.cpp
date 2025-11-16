@@ -8,6 +8,8 @@
 #include "MainWindow.h"
 #include "QHotkey"
 
+#include <QTimer>
+
 #ifdef ENABLE_SYNC
 #include "net/SyncServer.h"
 #endif
@@ -42,8 +44,7 @@ Clipboard::Clipboard(QWidget* parent)
       hotkey(new QHotkey(this)), listWidget(new QListWidget(this)), homeWidget(new MainWindow()) {
   setWindowOpacity(0.9);
 
-  setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::CustomizeWindowHint | Qt::WindowCloseButtonHint |
-                 Qt::WindowStaysOnTopHint);
+  setWindowFlags(Qt::Window | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowStaysOnTopHint);
   resize(360, 400);
 
   auto label = new QLabel("剪贴板", this);
@@ -372,6 +373,50 @@ void Clipboard::OnItemClicked(QListWidgetItem* listWidgetItem) {
   switch (item->GetMetaType()) {
   case QMetaType::QString: {
     clipboard->setText(item->GetText());
+
+#ifdef Q_OS_WIN
+    QTimer::singleShot(100, [item] {
+      HWND hwnd = ::GetForegroundWindow();
+      if (!hwnd)
+        return;
+
+      wchar_t windowTitle[256];
+      int titleLength = GetWindowTextW(hwnd, windowTitle, sizeof(windowTitle) / sizeof(wchar_t));
+
+      if (titleLength > 0) {
+        qDebug() << "window title" << QString::fromStdWString(std::wstring(windowTitle, titleLength));
+      }
+
+      auto text = item->GetText().toStdWString();
+
+      // std::vector<INPUT> inputs;
+      // for (wchar_t c : text) {
+      //   INPUT input{};
+      //   input.type = INPUT_KEYBOARD;
+      //   input.ki.wScan = c;
+      //   input.ki.dwFlags = KEYEVENTF_UNICODE;
+      //   inputs.push_back(input);
+      //
+      //   INPUT inputUp{};
+      //   inputUp.type = INPUT_KEYBOARD;
+      //   inputUp.ki.wScan = c;
+      //   inputUp.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+      //   inputs.push_back(inputUp);
+      // }
+      // SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+
+      if (text.length() <= 20) {
+        for (const auto& c : text) {
+          ::SendMessage(hwnd, WM_CHAR, c, 0);
+        }
+        return;
+      }
+
+      for (const auto& c : text) {
+        ::PostMessage(hwnd, WM_CHAR, c, 0);
+      }
+    });
+#endif
   } break;
   case QMetaType::QImage: {
     clipboard->setImage(item->GetImage());
