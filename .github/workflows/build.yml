@@ -4,13 +4,13 @@ name: platform-building
 
 on:
     push:
-        branches: ["main", "feature/sync_server"]
+        branches: ["main"]
         paths-ignore:
             - "README.md"
             - "README_zh.md"
             - "LICENSE"
     pull_request:
-        branches: ["main", "/feature/sync_server"]
+        branches: ["main"]
         paths-ignore:
             - "README.md"
             - "README_zh.md"
