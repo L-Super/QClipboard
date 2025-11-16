@@ -50,7 +50,9 @@ add_executable(${PROJECT_NAME}
         ${RES_FILES}
 )
 
-add_subdirectory(net)
+if (ENABLE_SYNC_FEATURE)
+    add_subdirectory(net)
+endif ()
 add_subdirectory(utils)
 
 if (WIN32)
@@ -108,18 +110,23 @@ FetchContent_Declare(spdlog
 
 FetchContent_MakeAvailable(QHotkey SingleApplication magic_enum json spdlog)
 
-target_link_libraries(QClipboard
+target_link_libraries(${PROJECT_NAME}
         Qt${QT_VERSION_MAJOR}::Core
         Qt${QT_VERSION_MAJOR}::Gui
         Qt${QT_VERSION_MAJOR}::Widgets
-        Qt${QT_VERSION_MAJOR}::Network
-        Qt${QT_VERSION_MAJOR}::WebSockets
         QHotkey::QHotkey
         SingleApplication::SingleApplication
         magic_enum::magic_enum
         nlohmann_json::nlohmann_json
         spdlog::spdlog_header_only
 )
+
+if (ENABLE_SYNC_FEATURE)
+    target_link_libraries(${PROJECT_NAME}
+            Qt${QT_VERSION_MAJOR}::Network
+            Qt${QT_VERSION_MAJOR}::WebSockets
+    )
+endif ()
 
 # Deploy the Qt Application
 if (WIN32)

@@ -18,9 +18,9 @@ def run_command(cmd, cwd=None):
     return True
 
 
-def build_package(build_dir, exe_name):
-    print("Building NSIS package...")
-    return build_nsis_installer(build_dir, exe_name)
+def build_package(build_dir, exe_name, variant):
+    print(f"Building NSIS package for {variant} version...")
+    return build_nsis_installer(build_dir, exe_name, variant)
 
 
 def find_nsis_compiler():
@@ -38,7 +38,7 @@ def find_nsis_compiler():
     return None
 
 
-def build_nsis_installer(build_dir, exe_name):
+def build_nsis_installer(build_dir, exe_name, variant):
     """Build NSIS installation package"""
     # Get project root directory
     project_root = Path(__file__).parent.parent
@@ -49,9 +49,36 @@ def build_nsis_installer(build_dir, exe_name):
 
     # Copy executable files and dependencies to installer directory
     app_dir = installer_dir / "src"
+    if app_dir.exists():
+        shutil.rmtree(app_dir)
     app_dir.mkdir(exist_ok=True)
 
-    shutil.copy(project_root / "scripts/nsis_package.nsi", installer_dir)
+    # Copy NSIS script and modify output filename based on variant
+    nsis_script_path = installer_dir / "nsis_package.nsi"
+    shutil.copy(project_root / "scripts/nsis_package.nsi", nsis_script_path)
+    
+    # Read and modify NSIS script to change output filename only
+    with open(nsis_script_path, 'r', encoding='utf-8') as f:
+        nsis_content = f.read()
+    
+    # Modify only the OutFile line based on variant
+    if variant == "standalone":
+        new_outfile = 'OutFile "QClipboard_${PRODUCT_VERSION}_x64_Standalone_Setup.exe"'
+    else:  # sync
+        new_outfile = 'OutFile "QClipboard_${PRODUCT_VERSION}_x64_Sync_Setup.exe"'
+    
+    # Replace the OutFile line in NSIS script
+    lines = nsis_content.split('\n')
+    for i, line in enumerate(lines):
+        if line.strip().startswith('OutFile'):
+            lines[i] = new_outfile
+            break
+    
+    nsis_content = '\n'.join(lines)
+    
+    with open(nsis_script_path, 'w', encoding='utf-8') as f:
+        f.write(nsis_content)
+
     shutil.copy(project_root / "src/resources/win/icon.ico", installer_dir)
 
     # Copy main program
@@ -74,14 +101,14 @@ def build_nsis_installer(build_dir, exe_name):
         return False
 
     # Build installation package
-    nsis_script_path = installer_dir / "nsis_package.nsi"
+    print(f"Building installer for {variant} version...")
 
     # Execute NSIS compilation
     cmd = f'"{nsis_compiler}" /INPUTCHARSET UTF8 "{nsis_script_path}"'
     if not run_command(cmd, installer_dir):
         return False
 
-    print("NSIS installation package build completed!")
+    print(f"NSIS installation package for {variant} version build completed!")
     return True
 
 
@@ -93,6 +120,8 @@ def main():
                         help='The binary output directory')
     parser.add_argument('--app-name', '-e', type=str, default='QClipboard.exe',
                         help='Name of the executable file')
+    parser.add_argument('--variant', '-v', type=str, choices=['standalone', 'sync'], 
+                        default='standalone', help='Build variant: standalone or sync')
 
     args = parser.parse_args()
 
@@ -110,11 +139,11 @@ def main():
         print(f"Error: Build directory does not exist: {build_dir} Please run CMake build first")
         return 1
 
-    if not build_package(build_dir, args.app_name):
+    if not build_package(build_dir, args.app_name, args.variant):
         print("Packaging failed!")
         return 1
 
-    print("Packaging completed!")
+    print(f"Packaging for {args.variant} version completed!")
     return 0
 
 

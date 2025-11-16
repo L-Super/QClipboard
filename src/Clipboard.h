@@ -7,7 +7,6 @@
 #include <QSet>
 #include <QSystemTrayIcon>
 #include <QWidget>
-#include <atomic>
 #include <memory>
 
 class QMenu;
@@ -16,7 +15,9 @@ class QClipboard;
 class QListWidget;
 class QListWidgetItem;
 class MainWindow;
+#ifdef ENABLE_SYNC
 class SyncServer;
+#endif
 
 class Clipboard : public QWidget {
   Q_OBJECT
@@ -25,7 +26,9 @@ public:
   explicit Clipboard(QWidget* parent = nullptr);
   ~Clipboard() override;
 
+#ifdef ENABLE_SYNC
   void ReloadSyncServer();
+#endif
 
 protected:
   void AddItem(const QVariant& data, const QByteArray& hash);
@@ -43,7 +46,9 @@ private:
   void InitTrayMenu();
   void CreateTrayAction();
   void InitShortcut();
+#ifdef ENABLE_SYNC
   bool InitSyncServer();
+#endif
 
 protected:
   void showEvent(QShowEvent* event) override;
@@ -62,7 +67,9 @@ private:
   QHash<QByteArray, QListWidgetItem*> hashItemMap;
   MainWindow* homeWidget;
   QString configFilePath;
+  bool ignoreNextDataChange{false};
+  bool ignoreNetDataChange{false};
+#ifdef ENABLE_SYNC
   std::unique_ptr<SyncServer> sync;
-  std::atomic_bool ignoreNextDataChange{false};
-  std::atomic_bool ignoreNetDataChange{false};
+#endif
 };

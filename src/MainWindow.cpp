@@ -25,6 +25,10 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
   buttonGroup->addButton(ui->shortcutButton, 1);
   buttonGroup->addButton(ui->syncButton, 2);
 
+#ifndef ENABLE_SYNC
+  ui->syncButton->hide();
+#endif
+
   // default is ui->generalButton
   ui->generalButton->setIcon(QIcon(":/resources/images/home-white.svg"));
   ui->generalButton->setChecked(true);

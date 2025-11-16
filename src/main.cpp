@@ -1,7 +1,9 @@
 #include "Clipboard.h"
 #include "SingleApplication"
+#ifdef ENABLE_SYNC
 #include "net/ProtocolHandler.h"
 #include "net/ProtocolRegistry.h"
+#endif
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
 #include "version.h"
@@ -73,10 +75,12 @@ int main(int argc, char* argv[]) {
   // 控制着当最后一个可视的窗口退出时候，程序是否退出，默认是true
   QApplication::setQuitOnLastWindowClosed(false);
 
+#ifdef ENABLE_SYNC
   // 注册自定义协议
   ProtocolRegistry protocolRegistry;
   if (!protocolRegistry.IsProtocolRegistered())
     protocolRegistry.RegisterProtocol();
+#endif
 
   auto configFilePath =
       QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation) + "/clipboard_settings.json";
@@ -86,6 +90,15 @@ int main(int argc, char* argv[]) {
 
   Clipboard c;
   c.show();
+
+  QObject::connect(&a, &SingleApplication::instanceStarted, &c, &Clipboard::show);
+  // 连接系统主题变化信号 Qt 6.5 support
+  QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, [](Qt::ColorScheme scheme) {
+    qDebug() << "System theme change to" << scheme;
+    ApplyTheme(scheme);
+  });
+
+#ifdef ENABLE_SYNC
   // 创建协议处理器
   ProtocolHandler protocolHandler;
   QObject::connect(&a, &SingleApplication::receivedMessage, &protocolHandler,
@@ -93,12 +106,6 @@ int main(int argc, char* argv[]) {
                      qDebug() << "instance id:" << instanceId << "message:" << message;
                      protocolHandler.HandleProtocolUrl(message);
                    });
-  QObject::connect(&a, &SingleApplication::instanceStarted, &c, &Clipboard::show);
-  // 连接系统主题变化信号 Qt 6.5 support
-  QObject::connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, [](Qt::ColorScheme scheme) {
-    qDebug() << "System theme change to" << scheme;
-    ApplyTheme(scheme);
-  });
 
   // 连接协议处理器的信号到剪贴板对象
   QObject::connect(&protocolHandler, &ProtocolHandler::loginDataReceived, &c,
@@ -123,6 +130,7 @@ int main(int argc, char* argv[]) {
   if (!protocolUrl.isEmpty()) {
     protocolHandler.HandleProtocolUrl(protocolUrl.toUtf8());
   }
+#endif
 
   return QApplication::exec();
 }

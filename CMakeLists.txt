@@ -10,6 +10,15 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+option(ENABLE_SYNC_FEATURE "enable sync feature" OFF)
+
+if (ENABLE_SYNC_FEATURE)
+    add_compile_definitions(ENABLE_SYNC)
+    message(STATUS "Enable sync version")
+else ()
+    message(STATUS "Enable standalone version")
+endif ()
+
 if (WIN32 AND MSVC)
     add_compile_options(/utf-8)
 endif ()

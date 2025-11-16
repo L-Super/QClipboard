@@ -6,13 +6,13 @@ on:
       - 'v*'
 
 jobs:
-  platform-build:
+  standalone-build:
+    name: Build Standalone Version
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
     env:
       QT_VERSION: 6.8.0
       BUILD_TYPE: Release
+      BUILD_VARIANT: standalone
 
     steps:
       - name: Checkout Source code
@@ -24,46 +24,131 @@ jobs:
           version: ${{ env.QT_VERSION }}
           cache: true
           cache-key-prefix: 'Qt'
-          modules: 'qtwebsockets'
 
-      - name: Configure CMake
-        run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+      - name: Configure CMake for Standalone
+        run: |
+          cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+          -DENABLE_SYNC_FEATURE=OFF
 
-      - name: Build
-        run: cmake --build ${{ github.workspace }}/build --config ${{ env.BUILD_TYPE }}
+      - name: Build Standalone
+        run: |
+          cmake --build ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} \
+          --config ${{ env.BUILD_TYPE }}
 
-      - name: Set reusable strings for output dir
-        id: strings
+      - name: Set output directories for Standalone
+        id: standalone-strings
         shell: bash
         # Note: `build/src/BUILD_TYPE` structure is created by CMake on Windows
         run: |
-          echo "build-output-dir=${{ github.workspace }}/build/src/${{ env.BUILD_TYPE }}" >> "$GITHUB_OUTPUT"
-          echo "installer-dir=${{ github.workspace }}/build/src/output" >> "$GITHUB_OUTPUT"
+          echo "build-output-dir=${{ github.workspace }}/build-${{ env.BUILD_VARIANT }}/src/${{ env.BUILD_TYPE }}" >> "$GITHUB_OUTPUT"
+          echo "installer-dir=${{ github.workspace }}/build-${{ env.BUILD_VARIANT }}/src/output" >> "$GITHUB_OUTPUT"
+          echo "variant=${{ env.BUILD_VARIANT }}" >> "$GITHUB_OUTPUT"
 
       - name: Install NSIS (Windows)
         run: |
           choco install nsis -y
           echo "NSIS_PATH=C:\Program Files\NSIS" >> $env:GITHUB_ENV
 
-      - name: Run Packaging Script (Windows)
+      - name: Run Packaging Script for Standalone
         run: |
-          python3 scripts/build_windows_package.py --output-dir ${{ steps.strings.outputs.build-output-dir }}
+          python3 scripts/build_windows_package.py \
+          --output-dir ${{ steps.standalone-strings.outputs.build-output-dir }} \
+          --variant ${{ steps.standalone-strings.outputs.variant }}
         working-directory: ${{ github.workspace }}
 
-      # # For CD test
-      # - name: Upload Windows installer as Artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: QClipboard-Windows-Installer
-      #     path: ${{ steps.strings.outputs.installer-dir }}/QClipboard*.exe
-      #     retention-days: 7
-          
-      - name: Create Release and Upload Artifacts
-        if: github.ref_type == 'tag'
+      - name: Upload Standalone Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: QClipboard-Standalone
+          path: ${{ steps.standalone-strings.outputs.installer-dir }}/QClipboard*.exe
+          retention-days: 7
+
+  sync-build:
+    name: Build Sync Version
+    runs-on: windows-latest
+    env:
+      QT_VERSION: 6.8.0
+      BUILD_TYPE: Release
+      BUILD_VARIANT: sync
+
+    steps:
+      - name: Checkout Source code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          cache: true
+          cache-key-prefix: 'Qt'
+          # needs WebSockets
+          modules: 'qtwebsockets'
+
+      - name: Configure CMake for Sync
+        run: |
+          cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+          -DENABLE_SYNC_FEATURE=ON
+
+      - name: Build Sync
+        run: |
+          cmake --build ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} \
+          --config ${{ env.BUILD_TYPE }}
+
+      - name: Set output directories for Sync
+        id: sync-strings
+        shell: bash
+        # Note: `build/src/BUILD_TYPE` structure is created by CMake on Windows
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build-${{ env.BUILD_VARIANT }}/src/${{ env.BUILD_TYPE }}" >> "$GITHUB_OUTPUT"
+          echo "installer-dir=${{ github.workspace }}/build-${{ env.BUILD_VARIANT }}/src/output" >> "$GITHUB_OUTPUT"
+          echo "variant=${{ env.BUILD_VARIANT }}" >> "$GITHUB_OUTPUT"
+
+      - name: Install NSIS (Windows)
+        run: |
+          choco install nsis -y
+          echo "NSIS_PATH=C:\Program Files\NSIS" >> $env:GITHUB_ENV
+
+      - name: Run Packaging Script for Sync
+        run: |
+          python3 scripts/build_windows_package.py \
+          --output-dir ${{ steps.sync-strings.outputs.build-output-dir }} \
+          --variant ${{ steps.sync-strings.outputs.variant }}
+        working-directory: ${{ github.workspace }}
+
+      - name: Upload Sync Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: QClipboard-Sync
+          path: ${{ steps.sync-strings.outputs.installer-dir }}/QClipboard*.exe
+          retention-days: 7
+
+  create-release:
+    name: Create Release
+    needs: [standalone-build, sync-build]
+    runs-on: windows-latest
+    if: github.ref_type == 'tag'
+
+    steps:
+      - name: Download Standalone Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: QClipboard-Standalone
+          path: artifacts/standalone
+
+      - name: Download Sync Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: QClipboard-Sync
+          path: artifacts/sync
+
+      - name: Create Release and Upload All Artifacts
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ steps.strings.outputs.installer-dir }}/QClipboard*.exe
+            artifacts/standalone/*.exe
+            artifacts/sync/*.exe
           draft: false
           prerelease: false
           generate_release_notes: true

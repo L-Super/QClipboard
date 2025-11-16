@@ -9,8 +9,6 @@ jobs:
   platform-build:
     # Because linuxdeployqt only supports ubuntu 22.04, not support higher version like 24.04
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
     env:
       QT_VERSION: 6.8.0
       BUILD_TYPE: Release

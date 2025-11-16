@@ -7,7 +7,11 @@
 #include "Item.h"
 #include "MainWindow.h"
 #include "QHotkey"
+
+#ifdef ENABLE_SYNC
 #include "net/SyncServer.h"
+#endif
+
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
 
@@ -63,7 +67,9 @@ Clipboard::Clipboard(QWidget* parent)
   CreateTrayAction();
   InitTrayMenu();
 
+#ifdef ENABLE_SYNC
   InitSyncServer();
+#endif
 
   qApp->installEventFilter(this);
 
@@ -74,6 +80,7 @@ Clipboard::Clipboard(QWidget* parent)
 
 Clipboard::~Clipboard() { homeWidget->deleteLater(); }
 
+#ifdef ENABLE_SYNC
 void Clipboard::ReloadSyncServer() {
   if (InitSyncServer()) {
     spdlog::info("ReloadSyncServer success");
@@ -85,6 +92,7 @@ void Clipboard::ReloadSyncServer() {
     }
   }
 }
+#endif
 
 void Clipboard::DataChanged() {
   if (ignoreNextDataChange) {
@@ -141,8 +149,11 @@ void Clipboard::DataChanged() {
     ignoreNetDataChange = false;
     return;
   }
+
+#ifdef ENABLE_SYNC
   if (sync)
     sync->uploadClipboardData(clipData);
+#endif
 }
 
 void Clipboard::ClearItems() {
@@ -196,12 +207,15 @@ void Clipboard::CreateTrayAction() {
   trayMenu->addAction(exitAction);
 
   connect(homeAction, &QAction::triggered, this, [this] {
+#ifdef ENABLE_SYNC
     if (sync) {
       homeWidget->SetOnlineStatus(sync->isLoggedIn());
     }
     else {
       homeWidget->SetOnlineStatus(false);
     }
+#endif
+
     homeWidget->show();
     homeWidget->raise();
   });
@@ -234,6 +248,7 @@ void Clipboard::InitShortcut() {
   connect(hotkey, &QHotkey::activated, this, &Clipboard::StayOnTop);
 }
 
+#ifdef ENABLE_SYNC
 bool Clipboard::InitSyncServer() {
   auto userInfo = Config::instance().getUserInfo();
   if (!userInfo.has_value()) {
@@ -278,7 +293,7 @@ bool Clipboard::InitSyncServer() {
               if (success) {
                 spdlog::info("Image downloaded successfully, updating clipboard");
                 // 忽略下一次dataChanged信号
-                ignoreNetDataChange.store(true, std::memory_order_relaxed);
+                ignoreNetDataChange = true;
                 clipboard->setImage(image);
               }
               else {
@@ -306,7 +321,7 @@ bool Clipboard::InitSyncServer() {
         if (type == "text") {
           if (!data.isEmpty()) {
             // 忽略下一次dataChanged信号
-            ignoreNetDataChange.store(true, std::memory_order_relaxed);
+            ignoreNetDataChange = true;
             clipboard->setText(data);
           }
         }
@@ -334,6 +349,7 @@ bool Clipboard::InitSyncServer() {
   }
   return false;
 }
+#endif
 
 void Clipboard::TrayIconActivated(QSystemTrayIcon::ActivationReason reason) {
   switch (reason) {
@@ -351,7 +367,7 @@ void Clipboard::OnItemClicked(QListWidgetItem* listWidgetItem) {
   Item* item = qobject_cast<Item*>(listWidget->itemWidget(listWidgetItem));
 
   // 设置标志位，忽略下一次dataChanged信号
-  ignoreNextDataChange.store(true, std::memory_order_relaxed);
+  ignoreNextDataChange = true;
 
   switch (item->GetMetaType()) {
   case QMetaType::QString: {
