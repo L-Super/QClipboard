@@ -14,6 +14,7 @@
 
 #include "utils/Config.h"
 #include "utils/Logger.hpp"
+#include "utils/Util.h"
 
 #include <QAction>
 #include <QApplication>
@@ -101,16 +102,22 @@ void Clipboard::DataChanged() {
     return;
   }
 
-  QVariant data;
   QByteArray hashValue;
   ClipboardData clipData;
+  ClipboardSourceInfo sourceInfo;
 
   const QMimeData* mimeData = clipboard->mimeData();
   qDebug() << "mime data type:" << mimeData->formats();
 
+  sourceInfo.timestamp = QDateTime::currentDateTime();
+  sourceInfo.processPath = utils::GetClipboardSourceAppPath();
+  sourceInfo.processName = utils::GetAppName(sourceInfo.processPath);
+  sourceInfo.icon = utils::GetAppIcon(sourceInfo.processPath);
+
   if (mimeData->hasText()) {
-    latestText = mimeData->text();
-    data.setValue(latestText);
+    const QString latestText = mimeData->text();
+
+    sourceInfo.data = latestText;
     hashValue = QCryptographicHash::hash(latestText.toUtf8(), QCryptographicHash::Md5);
 
     clipData.type = ClipboardDataType::text;
@@ -125,7 +132,7 @@ void Clipboard::DataChanged() {
     image.save(&buffer, "PNG");
     hashValue = QCryptographicHash::hash(ba, QCryptographicHash::Md5);
 
-    data.setValue(image);
+    sourceInfo.data = image;
 
     clipData.type = ClipboardDataType::image;
     clipData.data = ba;
@@ -134,7 +141,7 @@ void Clipboard::DataChanged() {
     qDebug() << "has urls" << mimeData->urls();
   }
 
-  if (data.isNull() || hashValue.isEmpty())
+  if (sourceInfo.data.isNull() || hashValue.isEmpty())
     return;
 
   // If it already exists, move the corresponding item to the front.
@@ -143,7 +150,7 @@ void Clipboard::DataChanged() {
     return;
   }
 
-  AddItem(data, hashValue);
+  AddItem(sourceInfo, hashValue);
 
   if (ignoreNetDataChange) {
     ignoreNetDataChange = false;
@@ -386,7 +393,7 @@ void Clipboard::OnItemClicked(QListWidgetItem* listWidgetItem) {
   hide();
 }
 
-void Clipboard::AddItem(const QVariant& data, const QByteArray& hash) {
+void Clipboard::AddItem(const ClipboardSourceInfo& data, const QByteArray& hash) {
   auto listItem = new QListWidgetItem();
   listItem->setSizeHint(QSize(300, 80));
   auto item = new Item(this);

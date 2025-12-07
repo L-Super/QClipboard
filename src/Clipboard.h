@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "Item.h"
+
 #include <QSet>
 #include <QSystemTrayIcon>
 #include <QWidget>
@@ -31,7 +33,7 @@ public:
 #endif
 
 protected:
-  void AddItem(const QVariant& data, const QByteArray& hash);
+  void AddItem(const ClipboardSourceInfo& , const QByteArray& hash);
   void MoveItemToTop(const QByteArray& hashValue);
 
 protected slots:
@@ -60,8 +62,6 @@ private:
   QSystemTrayIcon* trayIcon;
   QMenu* trayMenu;
   QHotkey* hotkey;
-  QString latestText;
-  QByteArray latestHashValue;
   QListWidget* listWidget;
   QSet<QByteArray> hashItems;
   QHash<QByteArray, QListWidgetItem*> hashItemMap;

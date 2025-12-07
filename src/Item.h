@@ -5,7 +5,17 @@
 #ifndef ITEM_H
 #define ITEM_H
 
+#include <QDateTime>
 #include <QWidget>
+
+struct ClipboardSourceInfo {
+  QIcon icon;          // 可执行文件图标
+  QString processName; // 可执行文件名
+  QString processPath; // 可执行文件路径
+  QDateTime timestamp; // 时间戳
+  QVariant data;       // 剪贴板数据
+};
+
 class QListWidgetItem;
 
 QT_BEGIN_NAMESPACE
@@ -23,7 +33,7 @@ public:
 
   ~Item() override;
 
-  void SetData(const QVariant& data, const QByteArray& hash);
+  void SetData(const ClipboardSourceInfo& data, const QByteArray& hash);
   void SetListWidgetItem(QListWidgetItem* listWidgetItem);
   QListWidgetItem* GetListWidgetItem() const;
 
@@ -35,7 +45,7 @@ public:
 
 protected:
   void DeleteButtonClicked();
-    void ApplyTheme(Qt::ColorScheme colorScheme);
+  void ApplyTheme(Qt::ColorScheme colorScheme);
 
 signals:
   void itemClickedSignal(const QString& text);
