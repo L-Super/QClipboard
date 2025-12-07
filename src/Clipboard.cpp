@@ -137,7 +137,7 @@ void Clipboard::DataChanged() {
   if (data.isNull() || hashValue.isEmpty())
     return;
 
-  // 如果已存在，则把对应 item 搬到最前面
+  // If it already exists, move the corresponding item to the front.
   if (hashItemMap.contains(hashValue)) {
     MoveItemToTop(hashValue);
     return;

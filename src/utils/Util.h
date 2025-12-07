@@ -9,4 +9,8 @@ namespace utils {
 QString generateDeviceId();
 
 QString macAddress();
+
+QString GetClipboardSourceAppPath();
+
+QString GetAppName(const QString& appPath);
 } // namespace utils
