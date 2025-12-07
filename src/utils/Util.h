@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <QIcon>
 #include <QString>
 
 namespace utils {
@@ -13,4 +14,6 @@ QString macAddress();
 QString GetClipboardSourceAppPath();
 
 QString GetAppName(const QString& appPath);
+
+QIcon GetAppIcon(const QString& appPath);
 } // namespace utils

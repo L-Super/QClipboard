@@ -7,6 +7,7 @@
 #include <QNetworkInterface>
 #include <QSysInfo>
 #include <QFileInfo>
+#include <QFileIconProvider>
 
 #ifdef Q_OS_WIN
 // clang-format off
@@ -67,5 +68,10 @@ QString GetClipboardSourceAppPath() {
 QString GetAppName(const QString& appPath) {
   QFileInfo info(appPath);
   return info.fileName();
+}
+
+QIcon GetAppIcon(const QString& appPath) {
+  QFileIconProvider iconProvider;
+  return iconProvider.icon(QFileInfo(appPath));
 }
 } // namespace utils
