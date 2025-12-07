@@ -33,7 +33,7 @@ public:
 #endif
 
 protected:
-  void AddItem(const ClipboardSourceInfo& , const QByteArray& hash);
+  void AddItem(const ClipboardSourceInfo& sourceInfo, const QByteArray& hash);
   void MoveItemToTop(const QByteArray& hashValue);
 
 protected slots:

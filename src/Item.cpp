@@ -34,22 +34,23 @@ Item::Item(const QString& text, QWidget* parent) : Item(parent) {
 
 Item::~Item() { delete ui; }
 
-void Item::SetData(const ClipboardSourceInfo& source_info, const QByteArray& hash) {
-  metaType = source_info.data.userType();
+void Item::SetData(const ClipboardSourceInfo& sourceInfo, const QByteArray& hash) {
+  metaType = sourceInfo.data.userType();
+  ui->infoPushButton->setToolTip(sourceInfo.processName);
 
   if (metaType == QMetaType::QString) {
-    SetText(source_info.data.toString());
+    SetText(sourceInfo.data.toString());
   }
   else if (metaType == QMetaType::QPixmap) {
     qDebug() << "Item add  Pixmap";
 
-    auto pixmap = source_info.data.value<QPixmap>();
+    auto pixmap = sourceInfo.data.value<QPixmap>();
     ui->label->setPixmap(pixmap);
   }
   else if (metaType == QMetaType::QImage) {
     qDebug() << "Item add QImage";
 
-    latestImage = source_info.data.value<QImage>();
+    latestImage = sourceInfo.data.value<QImage>();
 
     auto pixmap = latestImage.scaled(this->size(), Qt::KeepAspectRatio, Qt::FastTransformation);
     ui->label->setPixmap(QPixmap::fromImage(pixmap));

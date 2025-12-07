@@ -23,7 +23,7 @@
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
-     <item alignment="Qt::AlignRight">
+     <item alignment="Qt::AlignmentFlag::AlignRight">
       <widget class="QPushButton" name="deletePushButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -39,8 +39,8 @@
        </property>
       </widget>
      </item>
-     <item alignment="Qt::AlignRight">
-      <widget class="QPushButton" name="pushButton">
+     <item alignment="Qt::AlignmentFlag::AlignRight">
+      <widget class="QPushButton" name="infoPushButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
          <horstretch>0</horstretch>
