@@ -10,15 +10,19 @@
 #include <QStyleHints>
 #include <QVariant>
 
+#include "CustomToolTip.h"
+
 Item::Item(QWidget* parent) : QWidget(parent), ui(new Ui::Item) {
   ui->setupUi(this);
 
+  tipWidget = new CustomToolTip(this);
   ui->label->setWordWrap(true);
   ui->label->setAlignment(Qt::AlignTop);
   ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
-  //	ui->pushButton->setIcon(QIcon(":/resources/images/clipboard.svg"));
+  ui->infoPushButton->setIcon(QIcon(":/resources/images/info.svg"));
+  ui->infoPushButton->setEnabled(false);
 
-  ui->pushButton->hide();
+  ui->infoPushButton->installEventFilter(this);
 
   ApplyTheme(QGuiApplication::styleHints()->colorScheme());
 
@@ -36,7 +40,6 @@ Item::~Item() { delete ui; }
 
 void Item::SetData(const ClipboardSourceInfo& sourceInfo, const QByteArray& hash) {
   metaType = sourceInfo.data.userType();
-  ui->infoPushButton->setToolTip(sourceInfo.processName);
 
   if (metaType == QMetaType::QString) {
     SetText(sourceInfo.data.toString());
@@ -57,6 +60,8 @@ void Item::SetData(const ClipboardSourceInfo& sourceInfo, const QByteArray& hash
   }
 
   hashValue = hash;
+
+  tipWidget->SetData(sourceInfo);
 }
 
 void Item::SetText(const QString& text) { ui->label->setText(text); }
@@ -71,15 +76,15 @@ void Item::DeleteButtonClicked() { emit deleteButtonClickedSignal(GetListWidgetI
 
 void Item::ApplyTheme(Qt::ColorScheme scheme) {
   switch (scheme) {
-  case Qt::ColorScheme::Dark:
+  case Qt::ColorScheme::Dark: {
     ui->deletePushButton->setIcon(QIcon(":/resources/images/delete-white.svg"));
-    break;
+    ui->infoPushButton->setIcon(QIcon(":/resources/images/info-white.svg"));
+  } break;
   case Qt::ColorScheme::Light:
+  case Qt::ColorScheme::Unknown: {
     ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
-    break;
-  case Qt::ColorScheme::Unknown:
-    ui->deletePushButton->setIcon(QIcon(":/resources/images/delete.svg"));
-    break;
+    ui->infoPushButton->setIcon(QIcon(":/resources/images/info.svg"));
+  } break;
   }
 }
 
@@ -88,3 +93,22 @@ QImage Item::GetImage() const { return latestImage; }
 QByteArray Item::GetHashValue() const { return hashValue; }
 
 int Item::GetMetaType() const { return metaType; }
+
+bool Item::eventFilter(QObject* watched, QEvent* event) {
+  if (watched == ui->infoPushButton) {
+    if (event->type() == QEvent::Enter) {
+      if (QWidget* widget = qobject_cast<QWidget*>(watched)) {
+        // TODO: 智能调整位置，在屏幕边缘时
+        QPoint pos = widget->mapToGlobal(QPoint(0, widget->height()));
+        tipWidget->move(pos);
+        tipWidget->show();
+        return true;
+      }
+    }
+    else if (event->type() == QEvent::Leave) {
+      tipWidget->hide();
+      return true;
+    }
+  }
+  return QWidget::eventFilter(watched, event);
+}

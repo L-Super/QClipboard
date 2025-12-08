@@ -118,3 +118,9 @@ QMenu::separator {
     background-color: #495057;
     margin: 4px 8px;
 }
+
+QPushButton#infoPushButton {
+    background: transparent;
+    border: none;
+    outline: none;
+}

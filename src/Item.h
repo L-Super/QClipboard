@@ -17,6 +17,7 @@ struct ClipboardSourceInfo {
 };
 
 class QListWidgetItem;
+class CustomToolTip;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -46,6 +47,7 @@ public:
 protected:
   void DeleteButtonClicked();
   void ApplyTheme(Qt::ColorScheme colorScheme);
+  bool eventFilter(QObject *watched, QEvent *event) override;
 
 signals:
   void itemClickedSignal(const QString& text);
@@ -57,6 +59,7 @@ private:
   QImage latestImage;
   QByteArray hashValue;
   int metaType{0}; // default is UnknownType
+  CustomToolTip* tipWidget;
 };
 
 #endif // ITEM_H
