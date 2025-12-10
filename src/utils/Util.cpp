@@ -4,17 +4,14 @@
 
 #include "Util.h"
 
+#include <QFileIconProvider>
+#include <QFileInfo>
 #include <QNetworkInterface>
 #include <QSysInfo>
-#include <QFileInfo>
-#include <QFileIconProvider>
 
 #ifdef Q_OS_WIN
 // clang-format off
 #include <windows.h>
-#include <Psapi.h>
-
-#pragma comment(lib, "psapi.lib")
 // clang-format on
 #endif
 
@@ -37,33 +34,39 @@ QString macAddress() {
   return result;
 }
 
-QString GetClipboardSourceAppPath() {
 #ifdef Q_OS_WIN
+QString GetProcessPath(HWND hwnd) {
+  DWORD pid = 0;
+  GetWindowThreadProcessId(hwnd, &pid);
+  if (pid == 0)
+    return {};
+
+  // win 10 later only need PROCESS_QUERY_LIMITED_INFORMATION
+  HANDLE hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+  if (!hProc)
+    return {};
+
+  wchar_t buf[MAX_PATH] = {};
+  DWORD size = MAX_PATH;
+  QString result;
+
+  if (QueryFullProcessImageNameW(hProc, 0, buf, &size)) {
+    result = QString::fromWCharArray(buf, size);
+  }
+
+  CloseHandle(hProc);
+  return result;
+}
+
+QString GetClipboardSourceAppPath() {
   HWND clipboardOwner = GetClipboardOwner();
   if (!clipboardOwner) {
-    return "System or Unknown";
+    return {};
   }
 
-  DWORD processId = 0;
-  GetWindowThreadProcessId(clipboardOwner, &processId);
-
-  HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
-  if (!hProcess) {
-    // 尝试用较少权限打开
-    hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
-    if (!hProcess)
-      return "Unknown";
-  }
-
-  wchar_t filename[MAX_PATH] = {0};
-  GetModuleFileNameEx(hProcess, nullptr, filename, MAX_PATH);
-
-  CloseHandle(hProcess);
-  return QString::fromWCharArray(filename);
-#else
-  return {};
-#endif
+  return GetProcessPath(clipboardOwner);
 }
+#endif
 
 QString GetAppName(const QString& appPath) {
   QFileInfo info(appPath);
