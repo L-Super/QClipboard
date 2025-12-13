@@ -181,7 +181,16 @@ void Clipboard::RemoveItem(QListWidgetItem* item) {
 }
 
 void Clipboard::StayOnTop() {
-  // TODO: 窗口出现在输入光标位置
+#ifdef Q_OS_WIN
+  auto caretRect = utils::GetFocusCaretPosition();
+  if (caretRect.has_value()) {
+    QPoint targetPos = adjustPosition(caretRect.value());
+
+    move(targetPos);
+    qDebug() << "move to target position" << targetPos;
+  }
+#endif
+
   show();
   activateWindow();
   raise();
@@ -426,6 +435,61 @@ void Clipboard::MoveItemToTop(const QByteArray& hashValue) {
   // 移动后，确保选中第一项（索引0）
   listWidget->setCurrentRow(0);
   listWidget->scrollToTop();
+}
+
+QPoint Clipboard::adjustPosition(const QRect& anchorRect) {
+  // titlebar height
+  const int heightOffset = 32;
+  // improve y-axios position
+  const int offset = 5;
+
+  // 获取当前锚点所在的屏幕
+  QScreen* screen = QGuiApplication::screenAt(anchorRect.center());
+  if (!screen) {
+    screen = QGuiApplication::primaryScreen();
+  }
+
+  // 获取屏幕的可用几何区域 (availableGeometry 会自动减去任务栏的高度/宽度)
+  QRect screenRect = screen->availableGeometry();
+
+  // 获取窗口自身的尺寸
+  int winW = this->width();
+  int winH = this->height();
+
+  // 初始计算位置：默认显示在锚点的右下方
+  int x = anchorRect.right();
+  int y = anchorRect.bottom();
+  // --- 水平方向自适应 (防止超出右边界) ---
+  // 如果 (当前X + 窗口宽) 超过了屏幕右边缘
+  if (x + winW > screenRect.right()) {
+    x = screenRect.right() - winW;
+    qDebug() << "on right" << x;
+  }
+
+  // 检查左边界
+  if (x < screenRect.left()) {
+    x = screenRect.left(); // 强制贴左边
+    qDebug() << "on left" << x;
+  }
+
+  // --- 垂直方向自适应 (防止被底部任务栏遮挡) ---
+  // 如果 (当前Y + 窗口高) 超过了屏幕下边缘
+  if (y + winH > screenRect.bottom()) {
+    // 显示在锚点的上方
+    y = anchorRect.top() - winH - heightOffset - offset;
+    qDebug() << "on bottom" << y << anchorRect;
+  }
+  else {
+    y += offset;
+  }
+
+  // 检查上边界
+  if (y < screenRect.top()) {
+    y = screenRect.top(); // 强制贴顶边
+    qDebug() << "on top" << y;
+  }
+
+  return QPoint{x, y};
 }
 
 void Clipboard::showEvent(QShowEvent* event) {

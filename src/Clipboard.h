@@ -35,6 +35,7 @@ public:
 protected:
   void AddItem(const ClipboardSourceInfo& sourceInfo, const QByteArray& hash);
   void MoveItemToTop(const QByteArray& hashValue);
+  QPoint adjustPosition(const QRect& rect);
 
 protected slots:
   void DataChanged();

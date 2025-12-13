@@ -4,7 +4,10 @@
 
 #pragma once
 #include <QIcon>
+#include <QRect>
 #include <QString>
+
+#include <optional>
 
 namespace utils {
 QString generateDeviceId();
@@ -15,9 +18,11 @@ QString GetAppName(const QString& appPath);
 
 QIcon GetAppIcon(const QString& appPath);
 
-#ifdef Q_OS_WIN
 QString GetClipboardSourceAppPath();
 
+#ifdef Q_OS_WIN
 QString GetProcessPath(HWND hwnd);
+
+std::optional<QRect> GetFocusCaretPosition();
 #endif
 } // namespace utils
