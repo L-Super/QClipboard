@@ -36,6 +36,7 @@
 #include <QPushButton>
 #include <QSizePolicy>
 #include <QSystemTrayIcon>
+#include <QTimer>
 #include <QVBoxLayout>
 
 Clipboard::Clipboard(QWidget* parent)
@@ -400,6 +401,9 @@ void Clipboard::OnItemClicked(QListWidgetItem* listWidgetItem) {
   MoveItemToTop(item->GetHashValue());
 
   hide();
+
+  // delay to execute may better
+  QTimer::singleShot(100, [this] { this->pasteText(); });
 }
 
 void Clipboard::AddItem(const ClipboardSourceInfo& data, const QByteArray& hash) {
@@ -490,6 +494,34 @@ QPoint Clipboard::adjustPosition(const QRect& anchorRect) {
   }
 
   return QPoint{x, y};
+}
+
+void Clipboard::pasteText() {
+#ifdef Q_OS_WIN
+  INPUT inputs[4] = {};
+  ZeroMemory(inputs, sizeof(inputs));
+  // press Ctrl
+  inputs[0].type = INPUT_KEYBOARD;
+  inputs[0].ki.wVk = VK_CONTROL;
+  // press V
+  inputs[1].type = INPUT_KEYBOARD;
+  inputs[1].ki.wVk = 'V';
+  // release V
+  inputs[2].type = INPUT_KEYBOARD;
+  inputs[2].ki.wVk = 'V';
+  inputs[2].ki.dwFlags = KEYEVENTF_KEYUP;
+  // release Ctrl
+  inputs[3].type = INPUT_KEYBOARD;
+  inputs[3].ki.wVk = VK_CONTROL;
+  inputs[3].ki.dwFlags = KEYEVENTF_KEYUP;
+  // send input command
+  UINT uSent = SendInput(ARRAYSIZE(inputs), inputs, sizeof(INPUT));
+
+  if (uSent != ARRAYSIZE(inputs)) {
+    auto errorCode = GetLastError();
+    spdlog::warn("SendInput failed. error code:{}", errorCode);
+  }
+#endif
 }
 
 void Clipboard::showEvent(QShowEvent* event) {
