@@ -93,10 +93,10 @@ set(QAPPLICATION_CLASS QApplication CACHE STRING "Inheritance class for SingleAp
 
 include(FetchContent)
 FetchContent_Declare(QHotkey
-        URL https://github.com/Skycoder42/QHotkey/archive/refs/tags/1.5.0.tar.gz
+        GIT_REPOSITORY https://github.com/Skycoder42/QHotkey
 )
 FetchContent_Declare(SingleApplication
-        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.2.tar.gz
+        URL https://github.com/itay-grudev/SingleApplication/archive/refs/tags/v3.5.4.tar.gz
 )
 FetchContent_Declare(magic_enum
         GIT_REPOSITORY https://github.com/Neargye/magic_enum
@@ -109,7 +109,7 @@ FetchContent_Declare(json
 )
 FetchContent_Declare(spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog
-        GIT_TAG v1.15.3
+        GIT_TAG v1.16.0
         GIT_SHALLOW ON
         GIT_PROGRESS ON
 )
