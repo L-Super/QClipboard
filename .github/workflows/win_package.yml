@@ -152,3 +152,12 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ## Download Options
+            
+            Please choose the version that fits your needs:
+            
+            *   **Standalone**: Purely local. Data stays on your device. No internet required.
+            *   **Sync**: Multi-device synchronization support. Keep your data consistent across devices.
+
+            ---
