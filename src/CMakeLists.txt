@@ -1,7 +1,12 @@
 configure_file(version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h @ONLY)
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Gui Widgets Network WebSockets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets Network WebSockets REQUIRED)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Gui Widgets REQUIRED)
+
+if (ENABLE_SYNC_FEATURE)
+    find_package(QT NAMES Qt6 Qt5 COMPONENTS Network WebSockets REQUIRED)
+    find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Network WebSockets REQUIRED)
+endif ()
 
 get_target_property(QmakeExecutable Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
 get_filename_component(QtBinDir "${QmakeExecutable}" DIRECTORY)
