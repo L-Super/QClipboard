@@ -27,14 +27,11 @@ jobs:
 
       - name: Configure CMake for Standalone
         run: |
-          cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-          -DENABLE_SYNC_FEATURE=OFF
+          cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DENABLE_SYNC_FEATURE=OFF
 
       - name: Build Standalone
         run: |
-          cmake --build ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} \
-          --config ${{ env.BUILD_TYPE }}
+          cmake --build ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} --config ${{ env.BUILD_TYPE }}
 
       - name: Set output directories for Standalone
         id: standalone-strings
@@ -52,9 +49,7 @@ jobs:
 
       - name: Run Packaging Script for Standalone
         run: |
-          python3 scripts/build_windows_package.py \
-          --output-dir ${{ steps.standalone-strings.outputs.build-output-dir }} \
-          --variant ${{ steps.standalone-strings.outputs.variant }}
+          python3 scripts/build_windows_package.py --output-dir ${{ steps.standalone-strings.outputs.build-output-dir }} --variant ${{ steps.standalone-strings.outputs.variant }}
         working-directory: ${{ github.workspace }}
 
       - name: Upload Standalone Artifact
@@ -87,14 +82,11 @@ jobs:
 
       - name: Configure CMake for Sync
         run: |
-          cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} \
-          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
-          -DENABLE_SYNC_FEATURE=ON
+          cmake -B ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} -DENABLE_SYNC_FEATURE=ON
 
       - name: Build Sync
         run: |
-          cmake --build ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} \
-          --config ${{ env.BUILD_TYPE }}
+          cmake --build ${{ github.workspace }}/build-${{ env.BUILD_VARIANT }} --config ${{ env.BUILD_TYPE }}
 
       - name: Set output directories for Sync
         id: sync-strings
@@ -112,9 +104,7 @@ jobs:
 
       - name: Run Packaging Script for Sync
         run: |
-          python3 scripts/build_windows_package.py \
-          --output-dir ${{ steps.sync-strings.outputs.build-output-dir }} \
-          --variant ${{ steps.sync-strings.outputs.variant }}
+          python3 scripts/build_windows_package.py --output-dir ${{ steps.sync-strings.outputs.build-output-dir }} --variant ${{ steps.sync-strings.outputs.variant }}
         working-directory: ${{ github.workspace }}
 
       - name: Upload Sync Artifact
