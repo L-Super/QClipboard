@@ -40,7 +40,7 @@ static void initLogging(const std::string&& filePath) {
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(filePath, maxSize, maxFiles);
     std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
-    auto logger = std::make_shared<spdlog::logger>("qclipboard", std::begin(sinks), std::end(sinks));
+    auto logger = std::make_shared<spdlog::logger>("floward", std::begin(sinks), std::end(sinks));
 
     spdlog::set_default_logger(logger);
 

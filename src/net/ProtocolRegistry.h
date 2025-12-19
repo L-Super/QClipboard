@@ -14,16 +14,16 @@ public:
   ~ProtocolRegistry() override = default;
 
   // 注册自定义协议
-  void RegisterProtocol(const QString& protocolName = "qclipboard");
+  void RegisterProtocol(const QString& protocolName = "floward");
 
   // 取消注册自定义协议
-  void UnregisterProtocol(const QString& protocolName = "qclipboard");
+  void UnregisterProtocol(const QString& protocolName = "floward");
 
   // 检查协议是否已注册
-  bool IsProtocolRegistered(const QString& protocolName = "qclipboard");
+  bool IsProtocolRegistered(const QString& protocolName = "floward");
 
   // 获取协议URL
-  QString GetProtocolUrl(const QString& protocolName = "qclipboard");
+  QString GetProtocolUrl(const QString& protocolName = "floward");
 
 private:
 #if defined(Q_OS_WIN)

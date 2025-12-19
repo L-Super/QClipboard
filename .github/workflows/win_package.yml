@@ -55,8 +55,8 @@ jobs:
       - name: Upload Standalone Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: QClipboard-Standalone
-          path: ${{ steps.standalone-strings.outputs.installer-dir }}/QClipboard*.exe
+          name: Floward-Standalone
+          path: ${{ steps.standalone-strings.outputs.installer-dir }}/Floward*.exe
           retention-days: 7
 
   sync-build:
@@ -110,8 +110,8 @@ jobs:
       - name: Upload Sync Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: QClipboard-Sync
-          path: ${{ steps.sync-strings.outputs.installer-dir }}/QClipboard*.exe
+          name: Floward-Sync
+          path: ${{ steps.sync-strings.outputs.installer-dir }}/Floward*.exe
           retention-days: 7
 
   create-release:
@@ -124,13 +124,13 @@ jobs:
       - name: Download Standalone Artifact
         uses: actions/download-artifact@v4
         with:
-          name: QClipboard-Standalone
+          name: Floward-Standalone
           path: artifacts/standalone
 
       - name: Download Sync Artifact
         uses: actions/download-artifact@v4
         with:
-          name: QClipboard-Sync
+          name: Floward-Sync
           path: artifacts/sync
 
       - name: Create Release and Upload All Artifacts

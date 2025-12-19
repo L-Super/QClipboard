@@ -63,9 +63,9 @@ def build_nsis_installer(build_dir, exe_name, variant):
     
     # Modify only the OutFile line based on variant
     if variant == "standalone":
-        new_outfile = 'OutFile "QClipboard_${PRODUCT_VERSION}_x64_Standalone_Setup.exe"'
+        new_outfile = 'OutFile "Floward_${PRODUCT_VERSION}_x64_Standalone_Setup.exe"'
     else:  # sync
-        new_outfile = 'OutFile "QClipboard_${PRODUCT_VERSION}_x64_Sync_Setup.exe"'
+        new_outfile = 'OutFile "Floward_${PRODUCT_VERSION}_x64_Sync_Setup.exe"'
     
     # Replace the OutFile line in NSIS script
     lines = nsis_content.split('\n')
@@ -113,12 +113,12 @@ def build_nsis_installer(build_dir, exe_name, variant):
 
 
 def main():
-    print("=== QClipboard package tool ===")
+    print("=== Floward package tool ===")
 
     parser = argparse.ArgumentParser(description='Package tool into an installer.')
     parser.add_argument('--output-dir', '-o', type=str, default='build',
                         help='The binary output directory')
-    parser.add_argument('--app-name', '-e', type=str, default='QClipboard.exe',
+    parser.add_argument('--app-name', '-e', type=str, default='Floward.exe',
                         help='Name of the executable file')
     parser.add_argument('--variant', '-v', type=str, choices=['standalone', 'sync'], 
                         default='standalone', help='Build variant: standalone or sync')

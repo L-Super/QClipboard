@@ -1,6 +1,6 @@
-# QClipboard 打包脚本
+# Floward 打包脚本
 
-本目录包含了用于构建 QClipboard 安装包的脚本。
+本目录包含了用于构建 Floward 安装包的脚本。
 
 ## 脚本说明
 
@@ -10,7 +10,7 @@
 **使用方法：**
 
 ```bash
-python scripts/build_windows_package.py --output-dir build/src --app-name QClipboard.exe
+python scripts/build_windows_package.py --output-dir build/src --app-name Floward.exe
 ```
 
 **前置要求：**
@@ -22,7 +22,7 @@ python scripts/build_windows_package.py --output-dir build/src --app-name QClipb
 
 **使用方法：**
 ```bash
-python3 scripts/build_linux_package.py --output-dir build/src --app-name QClipboard --format appimage
+python3 scripts/build_linux_package.py --output-dir build/src --app-name Floward --format appimage
 ```
 
 **前置要求：**
@@ -46,8 +46,8 @@ python3 scripts/build_linux_package.py --output-dir build/src --app-name QClipbo
 2. **构建安装包**
    ```bash
    # 在项目根目录使用平台脚本
-   python scripts/build_windows_package.py --output-dir build/src --app-name QClipboard.exe # Windows
-   python3 scripts/build_linux_package.py --output-dir build/src --app-name QClipboard --format appimage # Linux
+   python scripts/build_windows_package.py --output-dir build/src --app-name Floward.exe # Windows
+   python3 scripts/build_linux_package.py --output-dir build/src --app-name Floward --format appimage # Linux
    ```
 
 ### CI/CD构建

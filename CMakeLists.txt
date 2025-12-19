@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(QClipboard
+project(Floward
         VERSION 3.0.0.0 # Set application version. For more details, see src/version.h.in
 )
 

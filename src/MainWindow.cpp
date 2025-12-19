@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
                            "### 版本\n"
                            "v%1\n"
                            "### 地址\n"
-                           "[L-Super/QClipboard](https://github.com/L-Super/QClipboard)")
+                           "[L-Super/Floward](https://github.com/L-Super/Floward)")
                        .arg(version)};
   ui->textBrowser->setMarkdown(md);
 

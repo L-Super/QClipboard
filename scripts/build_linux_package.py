@@ -95,7 +95,7 @@ def create_appimage(build_dir, app_name, project_root):
 
     shutil.copy(executable_path, app_dir)
     shutil.copy(project_root / "src/resources/icon.png", app_dir)
-    shutil.copy(project_root / "src/resources/linux/QClipboard.desktop", app_dir)
+    shutil.copy(project_root / "src/resources/linux/Floward.desktop", app_dir)
 
     # Run linuxdeploy
     deploy_cmd = f"{linuxdeploy} {app_name} -appimage"
@@ -189,27 +189,27 @@ def create_appimage(build_dir, app_name, project_root):
 #         (usr_bin_dir / app_name).chmod(0o755)
 
 #     # Copy desktop file
-#     desktop_src = project_root / "src" / "resources" / "linux" / "QClipboard.desktop"
+#     desktop_src = project_root / "src" / "resources" / "linux" / "Floward.desktop"
 #     if not desktop_src.exists():
 #         # Try the .in template file
 #         desktop_src = (
-#             project_root / "src" / "resources" / "linux" / "QClipboard.desktop.in"
+#             project_root / "src" / "resources" / "linux" / "Floward.desktop.in"
 #         )
 #     if desktop_src.exists():
-#         shutil.copy2(desktop_src, usr_share_applications_dir / "QClipboard.desktop")
+#         shutil.copy2(desktop_src, usr_share_applications_dir / "Floward.desktop")
 
 #     # Copy icon
 #     icon_src = project_root / "src" / "resources" / "icon.svg"
 #     if icon_src.exists():
-#         shutil.copy2(icon_src, usr_share_icons_dir / "QClipboard.svg")
+#         shutil.copy2(icon_src, usr_share_icons_dir / "Floward.svg")
 
 #     # Create control file
-#     control_content = f"""Package: QClipboard
+#     control_content = f"""Package: Floward
 # Version: 1.0.4.0
 # Section: utils
 # Priority: optional
 # Architecture: amd64
-# Maintainer: QClipboard Team <noreply@example.com>
+# Maintainer: Floward Team <noreply@example.com>
 # Description: A cross-platform clipboard tool
 #  A cross-platform clipboard tool that allows selecting items from clipboard history to paste.
 # """
@@ -250,7 +250,7 @@ def create_appimage(build_dir, app_name, project_root):
 
 
 def main():
-    print("=== QClipboard Linux package tool ===")
+    print("=== Floward Linux package tool ===")
 
     parser = argparse.ArgumentParser(description="Package tool for Linux platforms.")
     parser.add_argument(
@@ -264,7 +264,7 @@ def main():
         "--app-name",
         "-a",
         type=str,
-        default="QClipboard",
+        default="Floward",
         help="Name of the application",
     )
     parser.add_argument(

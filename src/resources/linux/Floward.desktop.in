@@ -2,7 +2,7 @@
 Categories=System;Office;
 Type=Application
 Keywords=clipboard;cross-platform clipboard;
-Name=QClipboard
+Name=Floward
 Exec=AppRun %F
 Icon=icon
 Comment=A cross-platform clipboard tool that allows selecting items from clipboard history to paste.

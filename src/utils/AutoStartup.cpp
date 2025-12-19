@@ -106,22 +106,22 @@ bool AutoStartup::IsWinAutoStartup() {
 void AutoStartup::SetLinuxAutoStartup(bool enable) {
   QString text{R"([Desktop Entry]
 Categories=Network;Office;
-Name=com.QClipboard.QClipboard
-Name[zh_CN]=QClipboard
+Name=com.Floward.Floward
+Name[zh_CN]=Floward
 Keywords=clipboard
 Keywords[zh_CN]=剪贴板
 Type=Application
-Exec=/opt/apps/com.QClipboard.QClipboard/files/QClipboard
+Exec=/opt/apps/com.Floward.Floward/files/Floward
 Icon=logo
 X-Deepin-CreatedBy=com.deepin.SessionManager
-X-Deepin-AppID=com.QClipboard.QClipboard
+X-Deepin-AppID=com.Floward.Floward
 Hidden=)"};
   // enable=false -> Hidden=true | enable=true -> Hidden=false
   text.append(enable ? "false\n" : "true\n");
 
   // need /home/{user}/.config/autostart/com.xxx.desktop path
   auto path = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
-  QFile file(path + "/autostart/com.QClipboard.QClipboard.desktop");
+  QFile file(path + "/autostart/com.Floward.Floward.desktop");
 
   try {
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -143,7 +143,7 @@ Hidden=)"};
 bool AutoStartup::IsLinuxAutoStartup() {
   auto path = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation);
 
-  QFile file(path + "/autostart/com.QClipboard.QClipboard.desktop");
+  QFile file(path + "/autostart/com.Floward.Floward.desktop");
   try {
     if (!file.open(QIODevice::ReadOnly)) {
       qDebug() << "AutoStart file open failed or not exist";
@@ -180,7 +180,7 @@ void AutoStartup::SetMacAutoStartup(bool enable) {
   QSettings settings(QCoreApplication::applicationDirPath() + "/../Info.plist", QSettings::NativeFormat);
   QString bundleIdentifier = settings.value("CFBundleIdentifier").toString();
   if (bundleIdentifier.isEmpty()) {
-    bundleIdentifier = "com.QClipboard.QClipboard";
+    bundleIdentifier = "com.Floward.Floward";
   }
   QString plistFileName = bundleIdentifier + ".plist";
   QString plistFilePath = launchAgentDirPath + "/" + plistFileName;
@@ -226,7 +226,7 @@ bool AutoStartup::IsMacAutoStartup() {
   QSettings settings(QCoreApplication::applicationDirPath() + "/../Info.plist", QSettings::NativeFormat);
   QString bundleIdentifier = settings.value("CFBundleIdentifier").toString();
   if (bundleIdentifier.isEmpty()) {
-    bundleIdentifier = "com.QClipboard.QClipboard";
+    bundleIdentifier = "com.Floward.Floward";
   }
   QString plistFileName = bundleIdentifier + ".plist";
   QString plistFilePath = launchAgentDirPath + "/" + plistFileName;

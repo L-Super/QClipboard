@@ -51,14 +51,14 @@ jobs:
           
       - name: Run Packaging Script (Linux)
         run: |
-          python3 scripts/build_linux_package.py --output-dir ${{ github.workspace }}/build/src --app-name QClipboard --format appimage
+          python3 scripts/build_linux_package.py --output-dir ${{ github.workspace }}/build/src --app-name Floward --format appimage
           
       # # For CD test  
       # - name: Upload Linux AppImage as Artifact
       #   uses: actions/upload-artifact@v4
       #   with:
-      #     name: QClipboard-Linux-AppImage
-      #     path: ${{ github.workspace }}/build/src/QClipboard*.AppImage
+      #     name: Floward-Linux-AppImage
+      #     path: ${{ github.workspace }}/build/src/Floward*.AppImage
       #     retention-days: 7
           
       - name: Create Release and Upload Artifacts
@@ -66,7 +66,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ github.workspace }}/build/src/QClipboard*.AppImage
+            ${{ github.workspace }}/build/src/Floward*.AppImage
           draft: false
           prerelease: false
           generate_release_notes: true

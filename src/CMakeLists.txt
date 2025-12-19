@@ -22,8 +22,8 @@ set(SRC_FILES
 )
 set(RES_FILES Clipboard.qrc)
 
-set(APP_DESCRIPTION "QClipboard")
-set(APP_COPYRIGHT "Copyright 2025-2077 The QClipboard.")
+set(APP_DESCRIPTION "Floward")
+set(APP_COPYRIGHT "Copyright 2025-2077 The Floward Steam.")
 
 if (WIN32)
     # set Windows rc info
@@ -32,10 +32,10 @@ if (WIN32)
     set(FILE_VERSION_STR "${PROJECT_VERSION}")
     set(PRODUCT_VERSION ${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},${PROJECT_VERSION_TWEAK}) # 产品版本
     set(PRODUCT_VERSION_STR "${PROJECT_VERSION}")
-    set(COMPANY_NAME "QClipboard")
+    set(COMPANY_NAME "Floward")
     set(FILE_DESCRIPTION ${APP_DESCRIPTION}) # 文件说明
     set(LEGAL_COPYRIGHT ${APP_COPYRIGHT})
-    set(PRODUCT_NAME "QClipboard")
+    set(PRODUCT_NAME "Floward")
 
     set(WIN_RES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/resources/win)
     configure_file(${WIN_RES_PATH}/app.rc.in ${WIN_RES_PATH}/app.rc @ONLY)
@@ -48,7 +48,7 @@ elseif (APPLE)
     set(RES_FILES ${RES_FILES} ${MAC_RES_PATH}/icon.icns)
 elseif (UNIX AND NOT APPLE)
     set(LINUX_RES_PATH ${CMAKE_CURRENT_SOURCE_DIR}/resources/linux)
-    configure_file(${LINUX_RES_PATH}/QClipboard.desktop.in ${LINUX_RES_PATH}/QClipboard.desktop @ONLY)
+    configure_file(${LINUX_RES_PATH}/Floward.desktop.in ${LINUX_RES_PATH}/Floward.desktop @ONLY)
 endif ()
 
 add_executable(${PROJECT_NAME}
@@ -74,7 +74,7 @@ elseif (APPLE)
     set_target_properties(${PROJECT_NAME} PROPERTIES
             MACOSX_BUNDLE_BUNDLE_NAME "${PROJECT_NAME}"
             MACOSX_BUNDLE_ICON_FILE "icon.icns"
-            MACOSX_BUNDLE_GUI_IDENTIFIER "com.QClipboard.QClipboard"
+            MACOSX_BUNDLE_GUI_IDENTIFIER "com.Floward.Floward"
             MACOSX_BUNDLE_INFO_STRING ${APP_DESCRIPTION}
             MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
             MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"

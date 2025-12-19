@@ -53,7 +53,7 @@ void ProtocolRegistry::RegisterWinProtocol(const QString& protocolName) {
   QString commandKey = QString("%1/shell/open/command").arg(protocolName);
 
   // 设置协议描述
-  settings.setValue(QString("%1/.").arg(protocolKey), "URL:QClipboard Protocol");
+  settings.setValue(QString("%1/.").arg(protocolKey), "URL:Floward Protocol");
   settings.setValue(QString("%1/URL Protocol").arg(protocolKey), "");
 
   // 设置协议图标
@@ -88,8 +88,8 @@ bool ProtocolRegistry::IsWinProtocolRegistered(const QString& protocolName) {
 void ProtocolRegistry::RegisterLinuxProtocol(const QString& protocolName) {
   // Linux下通过.desktop文件注册协议
   QString desktopContent = QString(R"([Desktop Entry]
-Name=QClipboard Protocol Handler
-Comment=Handle QClipboard protocol URLs
+Name=Floward Protocol Handler
+Comment=Handle Floward protocol URLs
 Exec=%1 %u
 Icon=%2
 Type=Application

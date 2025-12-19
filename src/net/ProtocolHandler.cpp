@@ -13,7 +13,7 @@
 #include <QUrlQuery>
 
 namespace {
-const QString PROTOCOL_SCHEME = "qclipboard";
+const QString PROTOCOL_SCHEME = "floward";
 const QString LOGIN_ACTION = "login";
 } // namespace
 
@@ -34,8 +34,8 @@ void ProtocolHandler::HandleProtocolUrl(const QString& url) {
   QString actionType = qurl.host();
 
   if (actionType.isEmpty()) {
-    // 对于 qclipboard://login? 格式，手动提取操作类型
-    // 移除 "qclipboard://"
+    // 对于 floward://login? 格式，手动提取操作类型
+    // 移除 "floward://"
     QString urlWithoutScheme = url.mid(PROTOCOL_SCHEME.length() + 3);
     int queryIndex = urlWithoutScheme.indexOf('?');
     if (queryIndex > 0) {

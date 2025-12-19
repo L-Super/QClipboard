@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>设置</string>
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
@@ -160,7 +160,7 @@
             </font>
            </property>
            <property name="text">
-            <string>QClipboard</string>
+            <string>Floward</string>
            </property>
           </widget>
          </item>

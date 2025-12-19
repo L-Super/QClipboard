@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
   QString protocolUrl;
   if (argc > 1) {
     auto arguments = QString::fromLocal8Bit(argv[1]);
-    if (arguments.startsWith("qclipboard://")) {
+    if (arguments.startsWith("floward://")) {
       protocolUrl = arguments;
     }
   }
