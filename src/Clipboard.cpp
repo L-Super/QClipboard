@@ -78,10 +78,6 @@ Clipboard::Clipboard(QWidget* parent)
   connect(clipboard, &QClipboard::dataChanged, this, &Clipboard::DataChanged);
   connect(listWidget, &QListWidget::itemClicked, this, &Clipboard::OnItemClicked);
   connect(clearButton, &QPushButton::clicked, this, &Clipboard::ClearItems);
-
-  for (int i = 0; i < 8; ++i) {
-    AddItem({.processName = "Test", .timestamp = QDateTime::currentDateTime(), .data = "test test"}, "ddd");
-  }
 }
 
 Clipboard::~Clipboard() { homeWidget->deleteLater(); }
@@ -283,16 +279,13 @@ bool Clipboard::InitSyncServer() {
       sync.reset();
     }
     sync = std::make_unique<SyncServer>(QString::fromStdString(url.value()));
-    if (!sync->setToken(QString::fromStdString(userInfo.value().token))) {
-      spdlog::warn("Token is invalid");
-      sync.reset();
-      return false;
-    }
 
     connect(sync.get(), &SyncServer::registrationFinished, [] {});
     connect(sync.get(), &SyncServer::loginFinished, [this](bool success, const Token& token, const QString& message) {
-      if (success)
+      if (success) {
+        homeWidget->SetOnlineStatus(true);
         qDebug() << "login successful";
+      }
       else
         qDebug() << "login failed." << message;
     });
@@ -366,6 +359,12 @@ bool Clipboard::InitSyncServer() {
     connect(sync.get(), &SyncServer::syncConnected, [] {});
     connect(sync.get(), &SyncServer::syncDisconnected, [] {});
     connect(sync.get(), &SyncServer::syncError, [] {});
+
+    if (!sync->setToken(QString::fromStdString(userInfo.value().token))) {
+      spdlog::warn("Token is invalid");
+      sync.reset();
+      return false;
+    }
     return true;
   }
   return false;

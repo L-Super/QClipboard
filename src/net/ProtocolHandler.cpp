@@ -20,8 +20,6 @@ const QString LOGIN_ACTION = "login";
 ProtocolHandler::ProtocolHandler(QObject* parent) : QObject(parent) {}
 
 void ProtocolHandler::HandleProtocolUrl(const QString& url) {
-  spdlog::info("Handling protocol URL:{}", url);
-
   if (!ValidateUrl(url)) {
     emit errorOccurred("Invalid protocol URL format");
     return;
@@ -85,6 +83,7 @@ QVariantMap ProtocolHandler::ParseUrlParameters(const QString& url) {
   }
   catch (const std::exception& e) {
     qDebug() << "Error parsing URL:" << e.what();
+    spdlog::error("Error parsing url:{}", e.what());
   }
 
   return parameters;

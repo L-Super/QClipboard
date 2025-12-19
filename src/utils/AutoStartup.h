@@ -27,6 +27,6 @@ private:
 #endif
 
 private:
-  const QString winRegistry{"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"};
+  const QString winRegistry{R"(HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run)"};
   // const QString winRegistry{"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"}; // 需要管理员
 };

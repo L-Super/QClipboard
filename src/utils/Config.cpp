@@ -9,8 +9,6 @@
 
 namespace fs = std::filesystem;
 
-std::string Config::defaultApiUrl{"https://clipboard-api.limuran.top"};
-
 Config::~Config() { save(); }
 
 std::expected<bool, std::string> Config::load(const fs::path& file) {
@@ -32,14 +30,12 @@ std::expected<bool, std::string> Config::load(const fs::path& file) {
   in.seekg(0, std::ios::end);
   if (in.tellg() == 0) {
     // File is empty, do not parse
-    fillDefaultValues();
     return std::unexpected("File is empty");
   }
   in.seekg(0, std::ios::beg);
 
   try {
     data_ = nlohmann::json::parse(in);
-    fillDefaultValues();
   }
   catch (const std::exception& e) {
     spdlog::error("Config json parse failed. {}", e.what());
@@ -89,10 +85,4 @@ std::optional<UserInfo> Config::getUserInfo() const {
     spdlog::error("User info not found. {}", e.what());
   }
   return std::nullopt;
-}
-
-void Config::fillDefaultValues() {
-  if (!data_.contains("url")) {
-    data_["url"] = defaultApiUrl;
-  }
 }

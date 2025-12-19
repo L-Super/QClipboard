@@ -49,6 +49,9 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
   AutoStartup autoStartup;
   ui->autoStartupCheckBox->setChecked(autoStartup.IsAutoStartup());
 
+  ui->warningLabel->setAlignment(Qt::AlignHCenter);
+  ui->tipsLabel->setAlignment(Qt::AlignHCenter);
+
   connect(ui->generalButton, &QToolButton::toggled, this, [this, button = ui->generalButton](bool checked) {
     if (checked) {
       button->setIcon(QIcon(":/resources/images/home-white.svg"));
@@ -80,15 +83,54 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
     AutoStartup autoStartup;
     autoStartup.SetAutoStartup(checked);
   });
-  connect(ui->deviceNameConfirmButton, &QPushButton::clicked, this, [this]() {
-    auto deviceName = ui->deviceNameLineEdit->text();
-    ui->deviceNameLineEdit->setPlaceholderText(deviceName);
-    if (!deviceName.isEmpty()) {
+  connect(ui->confirmButton, &QPushButton::clicked, this, [this]() {
+    bool changed{false};
+
+    QString deviceName = ui->deviceNameLineEdit->text();
+    if (deviceName.isEmpty()) {
+      deviceName = ui->deviceNameLineEdit->placeholderText();
+    }
+
+    if (deviceName.isEmpty()) {
+      ui->tipsLabel->setText("<span style='color:red;'>设备名为空</span>");
+      return;
+    }
+
+    if (options.deviceName != deviceName) {
+      ui->deviceNameLineEdit->clear();
+      ui->deviceNameLineEdit->setPlaceholderText(deviceName);
+      options.deviceName = deviceName;
+      changed = true;
+
       auto info = Config::instance().getServerConfig();
       if (info.has_value()) {
         info->device_name = deviceName.toStdString();
         Config::instance().setServerConfig(*info);
       }
+    }
+
+    QString url = ui->urlLineEdit->text();
+    if (url.isEmpty()) {
+      url = ui->urlLineEdit->placeholderText();
+    }
+
+    if (url.isEmpty()) {
+      ui->tipsLabel->setText("<span style='color:red;'>服务器 URL 为空</span>");
+      return;
+    }
+
+    if (options.url != url) {
+      ui->urlLineEdit->clear();
+      ui->urlLineEdit->setPlaceholderText(url);
+      options.url = url;
+      changed = true;
+
+      Config::instance().set("url", url.toStdString());
+    }
+
+    if (changed) {
+      ui->tipsLabel->setText("<span style='color:green;'>保存成功！</span>");
+      QTimer::singleShot(2000, [this]() { ui->tipsLabel->clear(); });
     }
   });
   // connect(ui->keySequenceEdit, &QKeySequenceEdit::editingFinished, this,
@@ -100,9 +142,12 @@ MainWindow::MainWindow(QWidget* parent) : QWidget(parent), ui(new Ui::MainWindow
     if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
       QDesktopServices::openUrl(QUrl(QString::fromStdString(url.value())));
     }
+    else if (!ui->urlLineEdit->text().isEmpty()) {
+      QDesktopServices::openUrl(QUrl(ui->urlLineEdit->text()));
+    }
     else {
-      // open default url
-      QDesktopServices::openUrl(QUrl(QString::fromStdString(Config::defaultApiUrl)));
+      ui->tipsLabel->setText("<span style='color:red;'>服务器 URL 不存在!</span>");
+      QTimer::singleShot(2000, [this]() { ui->tipsLabel->clear(); });
     }
   });
 }
@@ -134,7 +179,7 @@ void MainWindow::SetHotkey(QHotkey* hotkey) {
     }
 
     ui->warningLabel->show();
-    QTimer::singleShot(1000, [this]() { ui->warningLabel->clear(); });
+    QTimer::singleShot(2000, [this]() { ui->warningLabel->clear(); });
   });
 }
 
@@ -145,8 +190,16 @@ void MainWindow::SetOnlineStatus(bool online) {
 
     ui->accountLabel->setText(user);
     ui->accountStatusLabel->setText("<span style='color:green;'>在线</span>");
-    ui->deviceNameLineEdit->setPlaceholderText(QString::fromStdString(userInfo.value().device_name));
+    QString deviceName = QString::fromStdString(userInfo.value().device_name);
+    ui->deviceNameLineEdit->setPlaceholderText(deviceName);
+    options.deviceName = deviceName;
     ui->loginButton->hide();
+
+    if (auto url = Config::instance().get<std::string>("url"); url.has_value()) {
+      QString value = QString::fromStdString(url.value());
+      ui->urlLineEdit->setPlaceholderText(value);
+      options.url = value;
+    }
   }
   else {
     ui->accountLabel->clear();

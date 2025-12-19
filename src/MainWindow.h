@@ -28,8 +28,15 @@ protected:
   void showEvent(QShowEvent* event) override;
   void closeEvent(QCloseEvent* event) override;
 
+protected:
+  struct Options {
+    QString url;
+    QString deviceName;
+  };
+
 private:
   Ui::MainWindow* ui;
   QButtonGroup* buttonGroup{};
   QHotkey* hotkey{};
+  Options options;
 };

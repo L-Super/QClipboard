@@ -68,6 +68,8 @@ int main(int argc, char* argv[]) {
   a.setWindowIcon(QIcon(":/resources/icon.png"));
 #endif
 
+  spdlog::info("App launched, version:{}", VERSION_STR);
+
   a.setApplicationVersion(VERSION_STR);
 
   ApplyTheme(QGuiApplication::styleHints()->colorScheme());
@@ -112,6 +114,10 @@ int main(int argc, char* argv[]) {
                    [&c](const UserInfo& userInfo, const QVariantMap& additionalData) {
                      spdlog::info("Data received from custom protocol");
                      qDebug() << "Additional data:" << additionalData;
+                     QString url = additionalData.value("api_url", "").toString();
+                     if (!url.isEmpty()) {
+                       Config::instance().set("url", url.toStdString());
+                     }
 
                      Config::instance().setUserInfo(userInfo);
                      (void)Config::instance().save();
@@ -125,7 +131,7 @@ int main(int argc, char* argv[]) {
                    });
 
   QObject::connect(&protocolHandler, &ProtocolHandler::errorOccurred,
-                   [](const QString& errorMessage) { spdlog::info("Protocol error:{}", errorMessage); });
+                   [](const QString& errorMessage) { spdlog::error("Protocol url wrong. error:{}", errorMessage); });
 
   if (!protocolUrl.isEmpty()) {
     protocolHandler.HandleProtocolUrl(protocolUrl.toUtf8());
