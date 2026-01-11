@@ -7,6 +7,8 @@
 #include <QObject>
 #include <QString>
 
+#include "ProtocolCommon.h"
+
 class ProtocolRegistry : public QObject {
   Q_OBJECT
 public:
@@ -14,16 +16,16 @@ public:
   ~ProtocolRegistry() override = default;
 
   // 注册自定义协议
-  void RegisterProtocol(const QString& protocolName = "floward");
+  void RegisterProtocol(const QString& protocolName = ProtocolConstants::DEFAULT_PROTOCOL_SCHEME);
 
   // 取消注册自定义协议
-  void UnregisterProtocol(const QString& protocolName = "floward");
+  void UnregisterProtocol(const QString& protocolName = ProtocolConstants::DEFAULT_PROTOCOL_SCHEME);
 
   // 检查协议是否已注册
-  bool IsProtocolRegistered(const QString& protocolName = "floward");
+  bool IsProtocolRegistered(const QString& protocolName = ProtocolConstants::DEFAULT_PROTOCOL_SCHEME);
 
   // 获取协议URL
-  QString GetProtocolUrl(const QString& protocolName = "floward");
+  QString GetProtocolUrl(const QString& protocolName = ProtocolConstants::DEFAULT_PROTOCOL_SCHEME);
 
 private:
 #if defined(Q_OS_WIN)

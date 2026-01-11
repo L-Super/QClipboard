@@ -6,6 +6,7 @@
 
 #include "../utils/Logger.hpp"
 #include "ClipboardStruct.h"
+#include "ProtocolCommon.h"
 
 #include <QDebug>
 #include <QRegularExpression>
@@ -13,7 +14,6 @@
 #include <QUrlQuery>
 
 namespace {
-const QString PROTOCOL_SCHEME = "floward";
 const QString LOGIN_ACTION = "login";
 } // namespace
 
@@ -32,9 +32,9 @@ void ProtocolHandler::HandleProtocolUrl(const QString& url) {
   QString actionType = qurl.host();
 
   if (actionType.isEmpty()) {
-    // 对于 floward://login? 格式，手动提取操作类型
-    // 移除 "floward://"
-    QString urlWithoutScheme = url.mid(PROTOCOL_SCHEME.length() + 3);
+    // 对于 PROTOCOL_SCHEME://login? 格式，手动提取操作类型
+    // 移除 "PROTOCOL_SCHEME://"
+    QString urlWithoutScheme = url.mid(ProtocolConstants::DEFAULT_PROTOCOL_SCHEME.length() + 3);
     int queryIndex = urlWithoutScheme.indexOf('?');
     if (queryIndex > 0) {
       actionType = urlWithoutScheme.left(queryIndex);
@@ -91,13 +91,13 @@ QVariantMap ProtocolHandler::ParseUrlParameters(const QString& url) {
 
 bool ProtocolHandler::ValidateUrl(const QString& url) {
   // 检查URL是否以正确的协议开头
-  if (!url.startsWith(PROTOCOL_SCHEME + "://")) {
+  if (!url.startsWith(ProtocolConstants::DEFAULT_PROTOCOL_SCHEME + "://")) {
     return false;
   }
 
   // 使用QUrl验证URL格式
   QUrl qurl(url);
-  return qurl.isValid() && qurl.scheme() == PROTOCOL_SCHEME;
+  return qurl.isValid() && qurl.scheme() == ProtocolConstants::DEFAULT_PROTOCOL_SCHEME;
 }
 
 QString ProtocolHandler::DecodeUrlParameter(const QString& parameter) {

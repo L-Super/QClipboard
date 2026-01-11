@@ -14,6 +14,8 @@ option(ENABLE_SYNC_FEATURE "enable sync feature" OFF)
 
 if (ENABLE_SYNC_FEATURE)
     add_compile_definitions(ENABLE_SYNC)
+    # define protocol scheme marco
+    add_compile_definitions(PROTOCOL_SCHEME="floward")
     message(STATUS "Enable sync version")
 else ()
     message(STATUS "Enable standalone version")
