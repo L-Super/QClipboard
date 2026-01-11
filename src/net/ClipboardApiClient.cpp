@@ -65,6 +65,7 @@ void ClipboardApiClient::uploadClipboard(const ClipboardData& data, const QStrin
 
   QHttpPart typePart;
   typePart.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"type\"");
+
   if (data.type == ClipboardDataType::text) {
     typePart.setBody("text");
 
@@ -170,9 +171,6 @@ void ClipboardApiClient::handleJsonResponse(QNetworkReply* reply, Endpoint ep) {
     emit loginFinished(true, {.accessToken = accessToken, .refreshToken = refreshToken}, "");
   } break;
   case Endpoint::Upload: {
-    QString id = obj.value("id").toString();
-    QString created = obj.value("created_at").toString();
-
     emit uploadFinished(true, bytes);
   } break;
   case Endpoint::VerifyToken: {

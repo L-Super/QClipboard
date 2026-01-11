@@ -226,7 +226,7 @@ void Clipboard::CreateTrayAction() {
   connect(homeAction, &QAction::triggered, this, [this] {
 #ifdef ENABLE_SYNC
     if (sync) {
-      homeWidget->SetOnlineStatus(sync->isLoggedIn());
+      homeWidget->SetOnlineStatus(sync->isOnline());
     }
     else {
       homeWidget->SetOnlineStatus(false);
@@ -360,11 +360,13 @@ bool Clipboard::InitSyncServer() {
     connect(sync.get(), &SyncServer::syncDisconnected, [] {});
     connect(sync.get(), &SyncServer::syncError, [] {});
 
-    if (!sync->setToken(QString::fromStdString(userInfo.value().token))) {
+    if (!sync->authenticateWithToken(QString::fromStdString(userInfo.value().token))) {
       spdlog::warn("Token is invalid");
       sync.reset();
       return false;
     }
+
+    sync->startSync();
     return true;
   }
   return false;

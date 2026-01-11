@@ -16,6 +16,9 @@ public:
   void connectToServer();
   void disconnectFromServer();
 
+  // 检查连接状态
+  bool isConnected() const;
+
 signals:
   void connected();
   void disconnected();

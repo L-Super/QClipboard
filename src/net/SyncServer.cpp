@@ -7,6 +7,8 @@
 #include <QTimer>
 #include <QUrlQuery>
 
+#include "../utils/Logger.hpp"
+
 SyncServer::SyncServer(const QUrl& apiBaseUrl, QObject* parent)
     : QObject(parent), apiClient(new ClipboardApiClient(apiBaseUrl, this)) {
   setUrl(apiBaseUrl);
@@ -29,7 +31,7 @@ void SyncServer::setUrl(const QUrl& apiBaseUrl) {
   wsBaseUrl.setPath("/sync/notify");
 }
 
-bool SyncServer::setToken(const QString& token) {
+bool SyncServer::authenticateWithToken(const QString& token) {
   if (verifyTokenValid(token)) {
     authToken = token;
     handleLoginFinished(true, {.accessToken = token, .refreshToken = ""}, "");
@@ -40,7 +42,10 @@ bool SyncServer::setToken(const QString& token) {
   return false;
 }
 
-bool SyncServer::isLoggedIn() const { return isLoginSuccessful; }
+bool SyncServer::isOnline() const {
+  // 已登录成功 且 WebSocket 已连接
+  return isLoginSuccessful && wsClient->isConnected();
+}
 
 void SyncServer::registerUser(const QString& username, const QString& password) {
   apiClient->registerUser(username, password);
@@ -108,9 +113,6 @@ void SyncServer::handleLoginFinished(bool success, const Token& token, const QSt
   connect(wsClient, &ClipboardWebSocketClient::errorOccurred, this, &SyncServer::syncError);
   connect(wsClient, &ClipboardWebSocketClient::notifyMessageReceived, this, &SyncServer::notifyMessageReceived);
   connect(wsClient, &ClipboardWebSocketClient::reconnectExhausted, this, &SyncServer::reconnectExhausted);
-
-  // 自动建立连接
-  wsClient->connectToServer();
 }
 
 bool SyncServer::verifyTokenValid(const QString& token) {
@@ -119,18 +121,17 @@ bool SyncServer::verifyTokenValid(const QString& token) {
   QTimer timer;
   timer.setSingleShot(true);
   bool ok = false;
-  QString msg;
 
   auto onFinished = [&](bool success, const QString& message) {
     ok = success;
-    msg = message;
+    spdlog::info("Token verified. {}", message);
     if (loop.isRunning())
       loop.quit();
   };
 
   connect(&timer, &QTimer::timeout, &loop, [&] {
     ok = false;
-    msg = "verify-token timeout";
+    spdlog::warn("Verify token timeout");
     if (loop.isRunning())
       loop.quit();
   });

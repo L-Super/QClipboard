@@ -37,6 +37,10 @@ void ClipboardWebSocketClient::disconnectFromServer() {
   webSocket.close();
 }
 
+bool ClipboardWebSocketClient::isConnected() const {
+  return webSocket.state() == QAbstractSocket::ConnectedState;
+}
+
 void ClipboardWebSocketClient::onConnected() {
   emit connected();
   spdlog::info("WebSocket connected.");

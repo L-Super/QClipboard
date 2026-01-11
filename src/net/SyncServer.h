@@ -17,9 +17,10 @@ public:
   ~SyncServer() override;
 
   void setUrl(const QUrl& apiBaseUrl);
-  bool setToken(const QString& token);
 
-  bool isLoggedIn() const;
+  bool authenticateWithToken(const QString& token);
+
+  bool isOnline() const;
 
 public slots:
   // HTTP 接口
